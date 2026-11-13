@@ -21,18 +21,23 @@
       return
     }
     const allNodes = paths.map(path => ({
-      id: String(documents[path].meta.id || path),
+      id: path.replace(/\.md$/, ''),
       path,
-      title: String(documents[path].meta.title || path.split('/').pop()),
-      category: String(documents[path].meta.category || 'default'),
+      title: String(documents[path].body.match(/^#\s+(.+)$/m)?.[1]?.trim() || path.split('/').pop()),
+      category: String((documents[path].meta.tags || []).find(tag=>tag.startsWith('area/'))?.slice(5) || 'default'),
       tags: documents[path].meta.tags || []
     }))
     const byId = new Map(allNodes.map(node => [node.id, node]))
+    // Obsidian-compatible connections come from WikiLinks in Markdown bodies.
     const allEdges = paths.flatMap(path => {
-      const origin = documents[path].meta.id || path
-      return (documents[path].meta.links || [])
-        .filter(link => byId.has(link.to))
-        .map(link => ({ source: origin, target: link.to, type: link.type || 'related' }))
+      const source=path.replace(/\.md$/,'')
+      const matches=[...documents[path].body.matchAll(/\[\[([^\]\n]+)\]\]/g)]
+      return matches.map(m=>{
+        const ref=m[1].split('|')[0].split('#')[0].trim().replace(/\.md$/,'')
+        const dest=byId.has(ref)?ref:allNodes.filter(node=>node.id.split('/').pop()===ref)
+        const target=typeof dest==='string'?dest:Array.isArray(dest)&&dest.length===1?dest[0].id:null
+        return target&&target!==source?{source,target,type:'related'}:null
+      }).filter(Boolean)
     })
     const adjacency = new Map(allNodes.map(node => [node.id, new Set()]))
     for (const edge of allEdges) {
