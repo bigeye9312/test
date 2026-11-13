@@ -1,0 +1,66 @@
+name: Build Quartz Graph example
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'quartz-example/**'
+      - '.github/workflows/quartz-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out playbook repository
+        uses: actions/checkout@v4
+      - name: Fetch Quartz 4
+        run: git clone --depth 1 --branch v4 https://github.com/jackyzha0/quartz.git quartz-site
+      - name: Prepare docs content for Quartz
+        run: python quartz-example/prepare_content.py
+      - name: Configure Quartz site
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("quartz-site/quartz.config.ts")
+          content = p.read_text()
+          content = content.replace('pageTitle: "Quartz 4"', 'pageTitle: "SSD Analysis Playbook"')
+          content = content.replace('baseUrl: "quartz.jzhao.xyz"', 'baseUrl: "bigeye9312.github.io/test"')
+          content = content.replace('provider: "plausible"', 'provider: "none"')
+          p.write_text(content)
+          PY
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Quartz dependencies
+        working-directory: quartz-site
+        run: npm ci --no-audit --no-fund
+      - name: Build Quartz
+        working-directory: quartz-site
+        run: npx quartz build
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload generated site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: quartz-site/public
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
