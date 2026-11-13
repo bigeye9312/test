@@ -34,7 +34,7 @@
         const ref=m[1].split('|')[0].split('#')[0].trim().replace(/\.md$/,'')
         const dest=byId.has(ref)?ref:allNodes.filter(node=>node.id.split('/').pop()===ref)
         const target=typeof dest==='string'?dest:Array.isArray(dest)&&dest.length===1?dest[0].id:null
-        return target&&target!==source?{source,target,type:'related'}:null
+        return target&&target!==source?{source,target}:null
       }).filter(Boolean)
     })
     const adjacency = new Map(allNodes.map(node => [node.id, new Set()]))
@@ -44,27 +44,9 @@
     }
     const mode = options.mode || 'global'
     const focus = byId.get(options.focus) || allNodes[0]
-    const depth = Math.max(1, Math.min(2, Number(options.depth) || 1))
     let visible = new Set(allNodes.map(node => node.id))
     if (mode === 'local' && focus) {
-      visible = new Set([focus.id])
-      let frontier = new Set([focus.id])
-      for (let i = 0; i < depth; i++) {
-        const next = new Set()
-        for (const id of frontier) {
-          for (const neighbor of adjacency.get(id) || []) {
-            if (!visible.has(neighbor)) next.add(neighbor)
-            visible.add(neighbor)
-          }
-        }
-        frontier = next
-      }
-    } else if (mode === 'category' && options.category) {
-      const primary = allNodes.filter(node => node.category === options.category).map(node => node.id)
-      visible = new Set(primary)
-      for (const id of primary) {
-        for (const neighbor of adjacency.get(id) || []) visible.add(neighbor)
-      }
+      visible = new Set([focus.id, ...(adjacency.get(focus.id) || [])])
     }
     if (options.orphans === false) {
       visible = new Set([...visible].filter(id => (adjacency.get(id)?.size || 0) > 0))
@@ -83,7 +65,7 @@
     const edgeLayer = viewport.append('g')
     const nodeLayer = viewport.append('g')
     const linkSelection = edgeLayer.selectAll('line').data(edges).join('line')
-      .attr('class', d => 'graph-edge ' + (d.type === 'related' ? 'related' : 'conditional'))
+      .attr('class', 'graph-edge related')
       .style('stroke-width', Number(options.linkThickness) || 1)
     const nodeSelection = nodeLayer.selectAll('g').data(nodes).join('g')
       .attr('class', d => 'force-node' + (d.id === selectedId ? ' is-focus' : ''))
@@ -113,8 +95,6 @@
           .attr('x2', d => d.target.x).attr('y2', d => d.target.y)
         nodeSelection.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
       })
-    // Lay out the complete graph before fitting the viewport, so Reset View
-    // returns to a stable overview instead of a zoom level that clips nodes.
     simulation.stop()
     for (let i = 0; i < 240; i++) simulation.tick()
     linkSelection.attr('x1', d => d.source.x).attr('y1', d => d.source.y)

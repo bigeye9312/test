@@ -12,8 +12,6 @@ const categories = {
 let documents={}, pages=[], playbooks=[], folders={}
 let sidebarOrder=[]
 
-const pathSlug = path => path.replace(/\.md$/, '')
-
 let selected='playbook', expanded=new Set(['playbook','device-info'])
 let search='', graphFilter=''
 let sidebarCollapsed=false
@@ -216,7 +214,7 @@ function render(){
       render()
     }
     window.mountPlaybookGraph?.($('.graph-shell'),playbooks,documents,{
-      mode:graphMode,focus:graphFocus,depth:1,filter:graphFilter,
+      mode:graphMode,focus:graphFocus,filter:graphFilter,
       ...graphOptions,
       selectNode:navigateFocus,openDocument:select,
       resetView:()=>{
