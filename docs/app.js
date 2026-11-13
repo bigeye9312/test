@@ -32,7 +32,7 @@ function findWikiPath(raw,currentPath){
 const wikiTargets = body => [...body.matchAll(/\[\[([^\]]+)\]\]/g)].map(match=>match[1].split('|')[0])
 
 let selected='playbooks', expanded=new Set(['playbooks','products'])
-let search='', mode='files', showProperties=true, graphFilter=''
+let search='', showProperties=true, graphFilter=''
 let graphMode='global', graphFocus=null, graphDepth=1
 let graphSettingsOpen=true
 let graphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:410, linkDistance:135, showLabels:true}
@@ -53,6 +53,7 @@ async function load(){
   const params=new URLSearchParams(location.search)
   selected=documents[params.get('doc')]?params.get('doc'):(params.get('view')==='products'?'products':'playbooks')
   render()
+  if(params.get('heading'))document.getElementById(window.noteMarkdown.slug(params.get('heading')))?.scrollIntoView({block:'start'})
 }
 function label(path){return documents[path]?.body.match(/^#\s+(.+)$/m)?.[1]?.trim()||path.split('/').pop().replace(/\.md$/,'')}
 function tree(paths,prefix){
@@ -79,14 +80,11 @@ function treeHtml(entries,prefix='',depth=0){
   }).join('')
 }
 function sidebarHtml(){
-  const p=treeHtml(tree(playbooks,'playbooks/'))
-  const q=treeHtml(tree(products,'products/'))
-  return '<aside class="sidebar"><div class="sidebar-heading"><span>EXPLORER</span><span class="ghost">···</span></div>'+
-    '<div class="vault-title"><span class="vault-symbol">◆</span> SSD Analysis <span class="vault-caret">⌄</span></div>'+
-    '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Find files" aria-label="Find files" value="'+esc(search)+'"><span class="shortcut">⌕</span></div>'+
-    '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'"><span>◇</span> Playbooks</button><button class="section-toggle" data-top="playbooks" aria-label="Playbooks 펼치기">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
-    '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'"><span>▤</span> Products</button><button class="section-toggle" data-top="products" aria-label="Products 펼치기">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav>'+
-    '<div class="sidebar-foot"><span>●</span> Knowledge vault <span class="muted">· Demo</span></div></aside>'
+ const p=treeHtml(tree(playbooks,'playbooks/')),q=treeHtml(tree(products,'products/'))
+ return '<aside class="sidebar"><a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark">◇</span> SSD Analysis</a><div class="sidebar-caption">DOCUMENTATION</div>'+
+ '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Search files" aria-label="Search files" value="'+esc(search)+'"></div>'+
+ '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">Playbooks</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbooks">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
+ '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">Products</button><button class="section-toggle" data-top="products" aria-label="Toggle Products">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
 }
 function resolveLink(href,docPath){
   if(!href)return null
@@ -100,34 +98,16 @@ function resolveLink(href,docPath){
   const candidate=segments.join('/')
   return documents[candidate]?candidate:null
 }
-function markdownHtml(doc){
-  const converted=doc.body.replace(/\[\[([^\]\n]+)\]\]/g, (_,value)=>{
-    const [ref,alias]=value.split('|')
-    const target=findWikiPath(ref,doc.path)
-    return target?'['+(alias||label(target))+']('+target+')':(alias||ref)
-  })
-
-  const renderer=new marked.Renderer()
-  renderer.link=({href,text})=>{
-    if(!href||/^(javascript:|data:|vbscript:)/i.test(href||''))return esc(text)
-    const target=resolveLink(href,doc.path)
-    if(target)return '<a href="'+docUrl(target)+'" data-doc="'+esc(target)+'">'+text+'</a>'
-    return '<a href="'+esc(href)+'"'+(/^https?:/.test(href)?' target="_blank" rel="noopener noreferrer"':'')+'>'+text+'</a>'
-  }
-  return DOMPurify.sanitize(marked.parse(converted,{renderer}))
-}
+function markdownHtml(doc){return window.noteMarkdown.render(doc,documents,docUrl,label)}
 function propertyHtml(doc){
-  const tags=Array.isArray(doc.meta.tags)?doc.meta.tags:[]
-  const aliases=Array.isArray(doc.meta.aliases)?doc.meta.aliases:[]
-  const cssclasses=Array.isArray(doc.meta.cssclasses)?doc.meta.cssclasses:[]
-  const count=Number(tags.length>0)+Number(aliases.length>0)+Number(cssclasses.length>0)
-  if(!count)return ''
-  return '<div class="properties'+(showProperties?'':' collapsed')+'"><button type="button" class="properties-toggle" data-properties><span class="caret">'+(showProperties?'⌄':'›')+'</span> Properties <span class="prop-count">'+count+'</span></button>'+
-  (showProperties?'<div class="property-grid">'+
-  (aliases.length?'<div class="prop-key"><span class="prop-symbol">≋</span> aliases</div><div class="prop-value">'+aliases.map(esc).join(', ')+'</div>':'')+
-  (tags.length?'<div class="prop-key"><span class="prop-symbol">#</span> tags</div><div class="prop-value property-tags">'+tags.map(tag=>'<button class="tag-pill" data-tag="'+esc(tag)+'">#'+esc(tag)+'</button>').join('')+'</div>':'')+
-  (cssclasses.length?'<div class="prop-key"><span class="prop-symbol">◈</span> cssclasses</div><div class="prop-value">'+cssclasses.map(esc).join(', ')+'</div>':'')+
-  '</div>':'')+'</div>'
+ const tags=Array.isArray(doc.meta.tags)?doc.meta.tags:[]
+ const aliases=Array.isArray(doc.meta.aliases)?doc.meta.aliases:[]
+ if(!tags.length&&!aliases.length)return ''
+ return '<div class="properties'+(showProperties?'':' collapsed')+'"><button class="properties-toggle" data-properties><span class="caret">'+(showProperties?'⌄':'›')+'</span> Properties</button>'+
+ (showProperties?'<div class="property-grid">'+
+ (aliases.length?'<div class="prop-key">aliases</div><div class="prop-value">'+aliases.map(esc).join(', ')+'</div>':'')+
+ (tags.length?'<div class="prop-key">tags</div><div class="prop-value property-tags">'+tags.map(tag=>'<button class="tag-pill" data-tag="'+esc(tag)+'">#'+esc(tag)+'</button>').join('')+'</div>':'')+
+ '</div>':'')+'</div>'
 }
 function graphHtml(){
   const current=playbooks.find(path=>pathSlug(path)===graphFocus)
@@ -166,31 +146,31 @@ function productOverview(){
   return '<div class="article-wrap"><div class="eyebrow">DOCUMENTATION / PRODUCTS</div><h1 class="document-title">Products</h1><p class="doc-description">제품별 기준과 예외를 기록하는 문서입니다.</p><div class="product-list">'+products.map(path=>'<a data-doc="'+esc(path)+'" href="'+docUrl(path)+'"><span class="doc-icon">▧</span><span><strong>'+esc(label(path))+'</strong><small>'+esc(path)+'</small></span><span class="chevron">↗</span></a>').join('')+'</div></div>'
 }
 function articleHtml(doc){
-  const links=[...new Set(wikiTargets(doc.body).map(ref=>findWikiPath(ref,doc.path)).filter(Boolean))]
-  const edges=links.map(dest=>'<a class="backlink" data-doc="'+esc(dest)+'" href="'+docUrl(dest)+'"><span>↗</span><span><strong>'+esc(label(dest))+'</strong><small>Internal link</small></span></a>').join('')
-  return '<div class="article-wrap"><div class="eyebrow">'+esc(doc.path)+'</div><h1 class="document-title">'+esc(label(doc.path))+'</h1>'+
-    propertyHtml(doc)+'<article class="markdown">'+markdownHtml(doc)+'</article>'+
-    (edges?'<section class="references"><div class="references-heading">Linked notes <span>'+links.length+'</span></div>'+edges+'</section>':'')+'</div>'
+ const incoming=Object.values(documents).filter(source=>source.path!==doc.path&&window.noteMarkdown.refs(source.body).some(ref=>window.noteMarkdown.resolve(ref,source.path,documents)?.path===doc.path))
+ const links=incoming.map(source=>'<a class="backlink" data-doc="'+esc(source.path)+'" href="'+docUrl(source.path)+'"><span>↗</span><span><strong>'+esc(label(source.path))+'</strong><small>'+esc(source.path)+'</small></span></a>').join('')
+ return '<div class="article-wrap"><div class="eyebrow">'+esc(doc.path)+'</div><h1 class="document-title">'+esc(label(doc.path))+'</h1>'+
+ propertyHtml(doc)+'<article class="markdown">'+markdownHtml(doc)+'</article>'+
+ '<section class="references"><div class="references-heading">Backlinks <span>'+incoming.length+'</span></div>'+
+ (links||'<p class="empty-backlinks">No backlinks</p>')+'</section></div>'
 }
 function mainHtml(){
   return selected==='playbooks'?graphHtml():selected==='products'?productOverview():articleHtml(documents[selected])
 }
-function select(path){
+function select(path,heading=''){
   if(path==='playbooks'){graphMode='global';graphFocus=null}
   if(path!=='playbooks'&&path!=='products'&&!documents[path])return
   selected=path
-  history.pushState({},'',docUrl(path))
+  history.pushState({},'',docUrl(path)+(heading?'&heading='+encodeURIComponent(heading):''))
   render()
-  window.scrollTo({top:0,behavior:'instant'})
+  const target=heading?document.getElementById(window.noteMarkdown.slug(heading)):null
+  if(target)target.scrollIntoView({block:'start'})
+  else $('.page-content')?.scrollTo({top:0})
 }
 function render(){
   window.disposePlaybookGraph?.()
-  root.innerHTML='<div class="workbench"><div class="ribbon"><div class="ribbon-app" title="SSD Analysis">◆</div><button class="ribbon-btn'+(mode==='files'?' active':'')+'" title="파일 탐색기" data-mode="files">▤</button><button class="ribbon-btn" title="그래프 열기" data-section="playbooks">◇</button><div class="ribbon-spacer"></div><a class="ribbon-btn" title="GitHub 저장소" href="https://github.com/bigeye9312/test" target="_blank" rel="noopener noreferrer">↗</a></div>'+
-  sidebarHtml()+
-  '<div class="editor"><div class="tab-bar"><div class="tab active"><span class="tab-icon">'+(selected==='playbooks'?'◇':'▧')+'</span><span>'+esc(selected==='playbooks'?'Graph view':selected==='products'?'Products':label(selected))+'</span><span class="tab-close">×</span></div><button class="tab-plus" title="Playbooks 그래프" data-section="playbooks">＋</button></div>'+
-  '<div class="editor-toolbar"><div class="toolbar-path">SSD Analysis &nbsp; / &nbsp; '+esc(selected==='playbooks'?'Playbooks':selected==='products'?'Products':selected)+'</div><div class="toolbar-actions"><button class="toolbar-icon" title="Playbooks 그래프" data-section="playbooks">◇</button><a class="toolbar-icon" title="GitHub" href="https://github.com/bigeye9312/test" target="_blank" rel="noopener noreferrer">···</a></div></div>'+
-  '<main class="editor-content'+(selected==='playbooks'?' is-graph':'')+'">'+mainHtml()+'</main><div class="status-bar"><span>SSD Analysis Knowledge Base</span><span>Markdown &nbsp; · &nbsp; '+(selected==='playbooks'?'Graph · '+graphMode[0].toUpperCase()+graphMode.slice(1):selected==='products'?'Index':'Reading view')+'</span></div></div></div>'
-  root.querySelectorAll('[data-doc]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.doc)}))
+  root.innerHTML='<div class="shell">'+sidebarHtml()+'<main class="main"><div class="page-top"><span>'+esc(selected==='playbooks'?'Graph view':selected==='products'?'Products':label(selected))+'</span><a href="https://github.com/bigeye9312/test" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div>'+
+ '<div class="page-content'+(selected==='playbooks'?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
+  root.querySelectorAll('[data-doc]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.doc,node.dataset.heading||'')}))
   root.querySelectorAll('[data-section]').forEach(node=>node.addEventListener('click',()=>select(node.dataset.section)))
   root.querySelectorAll('[data-top]').forEach(node=>node.addEventListener('click',()=>{
     expanded.has(node.dataset.top)?expanded.delete(node.dataset.top):expanded.add(node.dataset.top);render()
@@ -233,5 +213,7 @@ window.addEventListener('popstate',()=>{
   const p=new URLSearchParams(location.search)
   selected=documents[p.get('doc')]?p.get('doc'):(p.get('view')==='products'?'products':'playbooks')
   render()
+  const h=p.get('heading')
+  if(h)document.getElementById(window.noteMarkdown.slug(h))?.scrollIntoView({block:'start'})
 })
 load().catch(error=>{root.innerHTML='<p class="loading-error">문서를 불러오지 못했습니다: '+esc(error.message)+'</p>';console.error(error)})
