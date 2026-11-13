@@ -4,9 +4,11 @@ Markdown을 원본으로 사용하는 **Obsidian-inspired 정적 문서 뷰어**
 
 ## 화면
 - **왼쪽 리본·파일 탐색기**: Playbooks / Products 디렉터리 트리 및 파일명 검색
-- **Playbooks 메인**: D3 force 기반 관계 그래프. 노드 드래그, 패닝, 휠 확대, 연결 강조, 노드 필터, 초기화
+- **Playbooks 메인**: D3 force 기반 관계 그래프. Global / Category / Local 탐색, 노드 드래그, 확대/축소, 연결 강조
+- **클릭 동작**: Global/Category의 노드 1회 클릭 → Local Graph. Local의 중심 노드 재클릭 → 문서. 노드 더블클릭 → 문서 바로 열기
+- **Local Graph**: 선택된 노드 기준 1-hop 또는 2-hop 인접 문서 표시 (카테고리를 넘어 연결된 문서 포함)
 - **문서 화면**: Markdown 읽기 모드, Frontmatter Properties(펼치기/접기), 클릭 가능한 태그, 관련 Playbook 링크
-- **디자인**: Obsidian 공식 인터페이스를 참고한 오리지널 다크 테마 CSS. Obsidian 자체 앱 코드/에셋은 복사하지 않았습니다.
+- **디자인**: Obsidian 공식 인터페이스를 참고한 오리지널 다크 테마 CSS. Graph의 상단 scope control, search/zoom toolbar 및 하단 legend/status. Obsidian 자체 앱 코드/에셋은 복사하지 않았습니다.
 
 ## 소스 구조
 
