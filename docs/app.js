@@ -17,7 +17,7 @@ const categories = {
 let documents={}, playbooks=[], products=[]
 let selected='playbooks', expanded=new Set(['playbooks','products'])
 let search='', mode='files', showProperties=true, graphFilter=''
-let graphMode='global', graphCategory='discovery', graphFocus=null, graphDepth=1
+let graphMode='global', graphFocus=null, graphDepth=1
 let graphSettingsOpen=true
 let graphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:410, linkDistance:135, showLabels:true}
 
@@ -108,8 +108,6 @@ function propertyHtml(doc){
 function graphHtml(){
   const current=playbooks.find(path=>documents[path].meta.id===graphFocus)
   const focusTitle=current?label(current):'Select a node'
-  const categoryOptions=Object.entries(categories)
-    .map(([id,value])=>'<option value="'+esc(id)+'"'+(graphCategory===id?' selected':'')+'>'+esc(value.label)+'</option>').join('')
   const checked=name=>graphOptions[name]?' checked':''
   const slider=(name,min,max,step,title)=>'<label class="settings-slider"><span>'+title+'</span><input type="range" data-graph-option="'+name+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+graphOptions[name]+'"></label>'
   const filters='<details open><summary>Filters</summary><div class="settings-group">'+
@@ -132,12 +130,7 @@ function graphHtml(){
     '<button class="graph-toolbar-button" data-graph-reset title="Reset view" aria-label="Reset view">⟲</button>'+
     '</div></div>'+
     '<div class="graph-canvas"></div>'+
-    '<div class="graph-overlay"><div class="graph-modes" role="group" aria-label="Graph scope">'+
-    ['global','category','local'].map(value=>'<button type="button" data-graph-mode="'+value+'" class="'+(graphMode===value?'active':'')+'" '+(value==='local'&&!graphFocus?'disabled title="Select a node first"':'')+'>'+value[0].toUpperCase()+value.slice(1)+'</button>').join('')+
-    '</div><div class="graph-context-tools">'+
-    (graphMode==='category'?'<label class="graph-control-label">Group <select id="graph-category">'+categoryOptions+'</select></label>':'')+
-    (graphMode==='local'?'<button data-graph-back class="graph-back" type="button">‹ &nbsp; Global</button><span class="graph-center-label">'+esc(focusTitle)+'</span><label class="graph-control-label">Depth <select id="graph-depth"><option value="1"'+(graphDepth===1?' selected':'')+'>1</option><option value="2"'+(graphDepth===2?' selected':'')+'>2</option></select></label>':'')+
-    '</div></div>'+
+    (graphMode==='local'?'<div class="graph-overlay"><div class="graph-context-tools"><button data-graph-back class="graph-back" type="button">‹ &nbsp; Global graph</button><span class="graph-center-label">'+esc(focusTitle)+'</span><label class="graph-control-label">Depth <select id="graph-depth"><option value="1"'+(graphDepth===1?' selected':'')+'>1</option><option value="2"'+(graphDepth===2?' selected':'')+'>2</option></select></label></div></div>':'')+
     '<aside class="graph-settings'+(graphSettingsOpen?' is-open':'')+'" aria-label="Graph settings">'+
     '<div class="settings-top"><strong>Graph settings</strong><button type="button" data-settings-close title="Close settings" aria-label="Close settings">×</button></div>'+
     filters+groups+display+forces+'</aside>'+
@@ -198,15 +191,10 @@ function render(){
       render()
     }
     window.mountPlaybookGraph?.($('.graph-shell'),playbooks,documents,{
-      mode:graphMode,category:graphCategory,focus:graphFocus,depth:graphDepth,filter:graphFilter,
+      mode:graphMode,focus:graphFocus,depth:graphDepth,filter:graphFilter,
       ...graphOptions,
       selectNode:navigateFocus,openDocument:select
     })
-    root.querySelectorAll('[data-graph-mode]').forEach(button=>button.addEventListener('click',()=>{
-      if(button.dataset.graphMode==='local'&&!graphFocus)return
-      graphMode=button.dataset.graphMode
-      render()
-    }))
     $('[data-graph-back]')?.addEventListener('click',()=>{graphMode='global';graphFocus=null;render()})
     $('[data-settings-toggle]')?.addEventListener('click',()=>{graphSettingsOpen=!graphSettingsOpen;$('.graph-settings')?.classList.toggle('is-open',graphSettingsOpen);$('[data-settings-toggle]')?.setAttribute('aria-expanded',String(graphSettingsOpen))})
     $('[data-settings-close]')?.addEventListener('click',()=>{graphSettingsOpen=false;$('.graph-settings')?.classList.remove('is-open');$('[data-settings-toggle]')?.setAttribute('aria-expanded','false')})
@@ -215,7 +203,6 @@ function render(){
       graphOptions[name]=control.type==='checkbox'?control.checked:Number(control.value)
       render()
     }))
-    $('#graph-category')?.addEventListener('change',e=>{graphCategory=e.target.value;render()})
     $('#graph-depth')?.addEventListener('change',e=>{graphDepth=Number(e.target.value);render()})
     $('#graph-search')?.addEventListener('change',e=>{graphFilter=e.target.value;render()})
     $('#graph-search')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();graphFilter=e.target.value;render()}})
