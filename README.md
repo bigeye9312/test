@@ -4,7 +4,7 @@ Markdown을 원본으로 사용하는 **Obsidian-inspired 정적 문서 뷰어**
 
 ## 화면
 - **왼쪽 리본·파일 탐색기**: Playbooks / Products 디렉터리 트리 및 파일명 검색
-- **Playbooks 메인**: D3 force 기반 관계 그래프. Global / Category / Local 탐색, 노드 드래그, 확대/축소, 연결 강조
+- **Playbooks 메인**: D3 force 기반 관계 그래프. Global → Local 탐색, 노드 드래그, 확대/축소, 연결 강조
 - **클릭 동작**: Global/Category의 노드 1회 클릭 → Local Graph. Local의 중심 노드 재클릭 → 문서. 노드 더블클릭 → 문서 바로 열기
 - **Local Graph**: 선택된 노드 기준 1-hop 또는 2-hop 인접 문서 표시 (카테고리를 넘어 연결된 문서 포함)
 - **문서 화면**: Markdown 읽기 모드, Frontmatter Properties(펼치기/접기), 클릭 가능한 태그, 관련 Playbook 링크
@@ -58,7 +58,7 @@ Graph canvas occupies the editor, with a collapsible floating settings panel on 
 - **Groups**: colors assigned by the existing Playbook category.
 - **Display**: node labels, node size, and link thickness.
 - **Forces**: repel force and link distance.
-- **Scope**: Global / Category / Local; Local includes optional 1- or 2-hop neighborhood.
+- **Navigation**: Global Graph is the landing view. Click a node to open Local Graph (1/2-hop), click the focused node again to open Markdown, or use Back to Global. Category colors are determined by the frontmatter `category` field, independent of `tags`.
 - **Navigation**: click a node once to enter its Local graph; click the same focused node again to open the document. Double-click opens a document immediately.
 
 Controls are intentionally limited to features supported by the current playbook data. Obsidian's attachment controls and query-driven groups are not included because there is no corresponding content model yet.
