@@ -19,7 +19,7 @@ let search='', graphFilter=''
 let sidebarCollapsed=false
 let graphMode='global', graphFocus=null
 let graphSettingsOpen=true
-const defaultGraphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:410, linkDistance:135, showLabels:true}
+const defaultGraphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:180, linkDistance:60, showLabels:true}
 let graphOptions={...defaultGraphOptions}
 
 const docUrl = path => path==='playbooks'||path==='products'?'?view='+path:folders[path]?'?folder='+encodeURIComponent(path):'?doc='+encodeURIComponent(path)
@@ -129,7 +129,7 @@ function graphHtml(){
     slider('nodeSize',3,14,1,'Node size')+slider('linkThickness',0.4,3,0.2,'Link thickness')+
     '</div></details>'
   const forces='<details><summary>Forces</summary><div class="settings-group">'+
-    slider('repel',120,900,20,'Repel force')+slider('linkDistance',70,260,10,'Link distance')+
+    slider('repel',80,900,20,'Repel force')+slider('linkDistance',30,260,10,'Link distance')+
     '</div></details>'
   return '<div class="graph-workspace">'+breadcrumb('playbooks')+'<h1 class="graph-page-title">'+esc(label('playbooks'))+'</h1><section class="graph-shell" aria-label="Interactive Playbook Graph">'+
     '<div class="graph-head"><div class="graph-head-actions">'+
