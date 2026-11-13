@@ -18,7 +18,7 @@ let selected='playbooks', expanded=new Set(['playbooks','products'])
 let search='', graphFilter=''
 let sidebarCollapsed=false
 let graphMode='global', graphFocus=null
-let graphSettingsOpen=true
+let graphSettingsOpen=false
 const defaultGraphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:180, linkDistance:60, showLabels:true}
 let graphOptions={...defaultGraphOptions}
 
@@ -136,6 +136,7 @@ function graphHtml(){
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '</div></div>'+
     '<div class="graph-canvas"></div>'+
+    '<label class="graph-quick-search'+(graphSettingsOpen?' is-hidden':'')+'"><span class="search-icon" aria-hidden="true">⌕</span><input id="graph-quick-search" type="search" placeholder="Search" value="'+esc(graphFilter)+'" aria-label="Search graph nodes"></label>'+
     '<aside class="graph-settings'+(graphSettingsOpen?' is-open':'')+'" aria-label="Settings">'+
     '<div class="settings-top"><strong>Settings</strong><button type="button" data-settings-close title="Close settings" aria-label="Close settings">×</button></div>'+
     filters+groups+display+forces+'</aside>'+
@@ -220,19 +221,29 @@ function render(){
         graphFocus=null
         graphFilter=''
         graphOptions={...defaultGraphOptions}
-        graphSettingsOpen=true
+        graphSettingsOpen=false
         render()
       }
     })
-    $('[data-settings-toggle]')?.addEventListener('click',()=>{graphSettingsOpen=!graphSettingsOpen;$('.graph-settings')?.classList.toggle('is-open',graphSettingsOpen);$('[data-settings-toggle]')?.setAttribute('aria-expanded',String(graphSettingsOpen))})
-    $('[data-settings-close]')?.addEventListener('click',()=>{graphSettingsOpen=false;$('.graph-settings')?.classList.remove('is-open');$('[data-settings-toggle]')?.setAttribute('aria-expanded','false')})
+    const setSettingsOpen=open=>{
+      graphSettingsOpen=open
+      $('.graph-settings')?.classList.toggle('is-open',open)
+      $('.graph-quick-search')?.classList.toggle('is-hidden',open)
+      $('[data-settings-toggle]')?.setAttribute('aria-expanded',String(open))
+      const activeInput=$(open?'#graph-search':'#graph-quick-search')
+      if(activeInput)activeInput.value=graphFilter
+    }
+    $('[data-settings-toggle]')?.addEventListener('click',()=>setSettingsOpen(!graphSettingsOpen))
+    $('[data-settings-close]')?.addEventListener('click',()=>setSettingsOpen(false))
     root.querySelectorAll('[data-graph-option]').forEach(control=>control.addEventListener('change',()=>{
       const name=control.dataset.graphOption
       graphOptions[name]=control.type==='checkbox'?control.checked:Number(control.value)
       render()
     }))
-    $('#graph-search')?.addEventListener('change',e=>{graphFilter=e.target.value;render()})
-    $('#graph-search')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();graphFilter=e.target.value;render()}})
+    for(const id of ['#graph-search','#graph-quick-search']){
+      $(id)?.addEventListener('change',e=>{graphFilter=e.target.value;render()})
+      $(id)?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();graphFilter=e.target.value;render()}})
+    }
   }
 }
 window.addEventListener('popstate',()=>{
