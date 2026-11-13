@@ -156,7 +156,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .article-wrap{padding:45px 25px 90px}
 }
 @media(max-width:650px){
-.workbench{grid-template-columns:0 minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+.workbench{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
 .ribbon{display:none}
 .sidebar{height:auto;max-height:190px;overflow:hidden;border-right:0;border-bottom:1px solid #363636}
 .sidebar-heading,.sidebar-foot,.vault-title{display:none}
