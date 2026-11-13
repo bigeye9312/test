@@ -1,0 +1,15 @@
+{
+  "playbooks": [
+    "playbooks/pcie-enumeration.md",
+    "playbooks/nvme-initialization.md",
+    "playbooks/command-processing.md",
+    "playbooks/pcie-error.md",
+    "playbooks/performance.md",
+    "playbooks/gc-state.md",
+    "playbooks/fw-state.md"
+  ],
+  "products": [
+    "products/product-a/gc.md",
+    "products/product-b/gc.md"
+  ]
+}
