@@ -74,3 +74,22 @@ details.callout>summary.callout-title{cursor:pointer;list-style:revert;padding:0
  .graph-workspace>.breadcrumbs{width:calc(100% - 36px);padding-top:27px;margin-bottom:20px}
  .graph-floating-tools{top:8px;right:8px}
 }
+
+/* Folders are first-class pages. Their labels navigate, while carets expand. */
+.tree-folder-row{display:flex;align-items:center;min-height:29px;padding-left:calc(14px + var(--level)*15px);border-radius:5px;gap:2px}
+.tree-folder-row:hover{background:#333}
+.tree-folder-expand{border:0;background:transparent;color:#999;flex:none;width:19px;height:26px;font-size:17px}
+.tree-folder-link{flex:1;min-width:0;font-size:12px;color:#aaa;padding:6px 6px 6px 3px;border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-folder-link:hover{color:#ddd}
+.tree-folder-link.selected{color:#dfcef9;font-weight:600}
+.breadcrumbs a.breadcrumb-current{color:#dedede;font-weight:650}
+.breadcrumbs a.breadcrumb-current:hover{color:#fff;background:#35313d}
+.folder-children{display:grid;gap:7px;margin-top:31px}
+.folder-children>a{display:flex;align-items:center;gap:12px;min-height:49px;padding:11px 14px;border:1px solid #353535;border-radius:6px;background:#252525}
+.folder-children>a:hover{background:#303030;border-color:#48404e}
+.folder-children strong{font-size:13px;color:#cfcfcf;font-weight:550}
+.folder-child-icon{font-size:16px;color:#a08abf}
+.folder-child-arrow{margin-left:auto;color:#8a8a8a;font-size:19px}
+.graph-page-title{width:calc(100% - 88px);max-width:762px;align-self:center;flex:none;font-size:34px;font-weight:680;letter-spacing:-.6px;color:#e7e7e7;margin:0 0 28px}
+@media(max-width:750px){.graph-page-title{width:calc(100% - 50px);font-size:28px}}
+@media(max-width:570px){.graph-page-title{width:calc(100% - 36px);margin-bottom:18px}}
