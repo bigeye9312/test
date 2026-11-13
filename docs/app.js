@@ -52,7 +52,7 @@ function treeHtml(entries,prefix='',depth=0){
   return Object.entries(entries).sort(([a],[b])=>a.localeCompare(b)).map(([name,value])=>{
     if(typeof value==='string'){
       if(search&&!((label(value)+' '+value+' '+(documents[value]?.meta.tags||[]).join(' ')).toLowerCase().includes(search.toLowerCase())))return ''
-      return '<a class="tree-item'+(selected===value?' selected':'')+'" style="--level:'+depth+'" data-doc="'+esc(value)+'" href="'+docUrl(value)+'"><span class="tree-icon">▧</span><span class="tree-label">'+esc(label(value))+'</span></a>'
+      return '<a class="tree-item'+(selected===value?' selected':'')+'" style="--level:'+depth+'" data-doc="'+esc(value)+'" href="'+docUrl(value)+'"><span class="tree-icon tree-leaf-dot" aria-hidden="true"></span><span class="tree-label">'+esc(label(value))+'</span></a>'
     }
     const id=prefix+name+'/'
     const folderId=id.slice(0,-1)
@@ -66,8 +66,8 @@ function sidebarHtml(){
  const p=treeHtml(tree(playbooks,'playbooks/'),'playbooks/'),q=treeHtml(tree(products,'products/'),'products/')
  return '<aside class="sidebar"><a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Magnifying glass">🔍</span> CIA Wiki</a>'+
  '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
- '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">Playbooks</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbooks">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
- '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">Products</button><button class="section-toggle" data-top="products" aria-label="Toggle Products">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
+ '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">Playbook</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbook">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
+ '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">Device Info</button><button class="section-toggle" data-top="products" aria-label="Toggle Device Info">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
 }
 function resolveLink(href,docPath){
   if(!href)return null
@@ -141,8 +141,9 @@ function breadcrumb(path){
    const current=i===parts.length-1
    const file=current&&path.endsWith('.md')
    const valid=file?!!documents[target]:!!folders[target]
-   if(!valid)return '<span>'+esc(part)+'</span>'
-   return '<a '+(file?'data-doc':'data-section')+'="'+esc(target)+'" href="'+docUrl(target)+'"'+(current?' aria-current="page" class="breadcrumb-current"':'')+'>'+esc(part)+'</a>'
+   const display=i===0?(part==='playbooks'?'playbook':part==='products'?'device-info':part):part
+   if(!valid)return '<span>'+esc(display)+'</span>'
+   return '<a '+(file?'data-doc':'data-section')+'="'+esc(target)+'" href="'+docUrl(target)+'"'+(current?' aria-current="page" class="breadcrumb-current"':'')+'>'+esc(display)+'</a>'
  }).join('<span class="breadcrumb-divider">/</span>')+'</nav>'
 }
 function folderHtml(folder){
