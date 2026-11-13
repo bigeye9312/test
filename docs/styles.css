@@ -188,3 +188,22 @@ body{background:#fff;color:#27313c}
 .graph-workspace>.page-metadata{color:#66717e}
 .loading-error{color:#8a2932}
 @media(max-width:570px){.sidebar{border-bottom:1px solid #e5e7eb}}
+
+.tree-item .tree-leaf-dot{
+  width:19px;
+  height:18px;
+  flex:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:0;
+}
+.tree-item .tree-leaf-dot::before{
+  content:"";
+  display:block;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:#a0a7b3;
+}
+.tree-item.selected .tree-leaf-dot::before{background:#7077a5}
