@@ -289,3 +289,40 @@ body{background:#fff;color:#27313c}
 }
 
 .sidebar-search>.search-icon,.settings-search>.search-icon{display:inline-block;transform:scaleX(-1)}
+
+/* Compact graph search replaces the settings panel while it is closed. */
+.graph-quick-search{
+  position:absolute;
+  top:53px;
+  right:15px;
+  z-index:3;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  width:245px;
+  max-width:calc(100% - 30px);
+  height:34px;
+  padding:0 10px;
+  border:1px solid #444;
+  border-radius:5px;
+  background:#272727;
+  color:#a0a0a0;
+  font-size:16px;
+  box-shadow:0 3px 10px #0002;
+}
+.graph-quick-search.is-hidden{display:none}
+.graph-quick-search .search-icon{display:inline-block;transform:scaleX(-1)}
+.graph-quick-search input{
+  flex:1;
+  min-width:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#ddd;
+  font-size:11px;
+}
+.graph-quick-search input::placeholder{color:#999}
+.graph-quick-search:focus-within{border-color:#786897}
+@media(max-width:750px){
+  .graph-quick-search{top:43px;right:6px;max-width:calc(100% - 12px)}
+}
