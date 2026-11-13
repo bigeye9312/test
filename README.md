@@ -42,6 +42,8 @@ npm, Node.js, Quartz, GitHub Actions 빌드는 사용하지 않습니다. 브라
 
 새 문서는 `docs/manifest.json`에 파일 경로를 추가해야 뷰어에서 인식합니다.
 
+사이드바 최상위 폴더 표시 순서는 `docs/manifest.json`의 `sidebarOrder` 배열로 설정합니다. 예: `"sidebarOrder": ["products", "playbooks"]`는 **Device Info → Playbook** 순서입니다. `sidebarOrder`를 생략하면 **Playbook → Device Info** 순서가 기본값이며, 배열에 없는 기존 섹션은 기본 순서대로 뒤에 추가됩니다. 폴더 경로와 URL은 변경되지 않습니다.
+
 ## 공식 문서
 - https://help.obsidian.md/properties
 - https://help.obsidian.md/syntax
