@@ -31,7 +31,6 @@ async function load() {
   render()
 }
 const label = (path) => docs[path]?.meta.title || path.split('/').pop().replace(/\.md$/,'')
-const nodeById = Object.fromEntries // intentionally replaced below after docs loaded
 function tree(paths, prefix) {
   const group = {}
   for (const path of paths) {
@@ -102,7 +101,20 @@ function contentHtml(doc) {
     const target = playbooks.find(path => docs[path].meta.id===link.to)
     return target ? '<li><a href="'+docUrl(target)+'" data-doc="'+esc(target)+'">'+esc(label(target))+'</a><span class="connection-note">'+esc(link.label || (link.type === 'related' ? '관련 문서' : '조건부 검토'))+'</span></li>' : ''
   }).join('')
-  const body = xssSafe(marked.parse(doc.body))
+  const renderer = new marked.Renderer()
+  renderer.link = ({href, text, title}) => {
+    if (!href || /^(javascript:|data:|vbscript:)/i.test(href)) return esc(text)
+    if (/^(https?:|mailto:|#)/i.test(href)) return '<a href="'+esc(href)+'">'+text+'</a>'
+    const segments = doc.path.split('/').slice(0,-1)
+    for (const part of href.split('/')) {
+      if (part === '..') segments.pop()
+      else if (part !== '.') segments.push(part)
+    }
+    const target = segments.join('/')
+    if (docs[target]) return '<a data-doc="'+esc(target)+'" href="'+docUrl(target)+'">'+text+'</a>'
+    return '<a href="'+esc(href)+'">'+text+'</a>'
+  }
+  const body = xssSafe(marked.parse(doc.body, {renderer}))
   return '<div class="bread">DOCS / '+esc(doc.path)+'</div>'+
     '<h1 class="page-title">'+esc(meta.title || label(doc.path))+'</h1>'+
     (meta.description?'<p class="description">'+esc(meta.description)+'</p>':'')+
