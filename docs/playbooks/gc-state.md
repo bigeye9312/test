@@ -1,15 +1,9 @@
 ---
-id: gc-state
-title: GC 상태 해석
-description: 내부 리소스와 GC 실행 조건을 분석합니다.
-category: internal
-tags: [gc, ftl, firmware]
-links:
-  - to: fw-state
-    type: related
-    label: 펌웨어 스케줄러와 내부 상태 참고
+tags: [area/internal, gc, ftl, firmware]
 ---
 # GC 상태 해석
+
+내부 리소스와 GC 실행 조건을 분석합니다.
 
 ## 확인할 사항
 1. Free Block 수를 확인한다.
@@ -22,3 +16,7 @@ links:
 
 ## 주의
 GC 진입 조건의 충족이 실제 GC 실행을 의미하지는 않는다.
+
+## Related Playbooks
+
+- [[playbooks/fw-state|fw-state]] — 펌웨어 스케줄러와 내부 상태 참고
