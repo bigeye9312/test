@@ -173,7 +173,7 @@
     const resetButton = panel.querySelector('[data-graph-reset]')
     const zoomInButton = panel.querySelector('[data-zoom-in]')
     const zoomOutButton = panel.querySelector('[data-zoom-out]')
-    const onReset = () => svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity)
+    const onReset = () => options.resetView ? options.resetView() : svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity)
     const onZoomIn = () => svg.transition().duration(180).call(zoom.scaleBy, 1.3)
     const onZoomOut = () => svg.transition().duration(180).call(zoom.scaleBy, 1 / 1.3)
     resetButton?.addEventListener('click', onReset)
