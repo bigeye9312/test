@@ -17,5 +17,9 @@
     "products": "products/index.md",
     "products/product-a": "products/product-a/index.md",
     "products/product-b": "products/product-b/index.md"
-  }
+  },
+  "sidebarOrder": [
+    "products",
+    "playbooks"
+  ]
 }
