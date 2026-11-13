@@ -327,5 +327,3 @@ body{background:#fff;color:#27313c}
   .graph-quick-search{top:43px;right:6px;max-width:calc(100% - 12px)}
 }
 
-/* Align the tag glyph's diagonal with the backlinks icon. */
-.metadata-icon[title="Tags"] svg{transform:scaleX(-1)}
