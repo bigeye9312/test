@@ -73,10 +73,11 @@ function treeHtml(entries,prefix='',depth=0){
       return '<a class="tree-item'+(selected===value?' selected':'')+'" style="--level:'+depth+'" data-doc="'+esc(value)+'" href="'+docUrl(value)+'"><span class="tree-icon">▧</span><span class="tree-label">'+esc(label(value))+'</span></a>'
     }
     const id=prefix+name+'/'
+    const folderId=id.slice(0,-1)
     const open=search||expanded.has(id)
     const content=treeHtml(value,id,depth+1)
     if(search&&!content)return ''
-    return '<div class="tree-group"><button type="button" class="tree-folder" style="--level:'+depth+'" data-folder="'+esc(id)+'"><span class="caret">'+(open?'⌄':'›')+'</span><span>'+esc(name)+'</span></button>'+(open?'<div>'+content+'</div>':'')+'</div>'
+    return '<div class="tree-group"><div class="tree-folder-row" style="--level:'+depth+'"><button type="button" class="tree-folder-expand" data-folder="'+esc(id)+'" aria-label="Expand or collapse '+esc(name)+'">'+(open?'⌄':'›')+'</button><a class="tree-folder-link'+(selected===folderId?' selected':'')+'" data-section="'+esc(folderId)+'" href="'+docUrl(folderId)+'">'+esc(label(folderId))+'</a></div>'+(open?'<div>'+content+'</div>':'')+'</div>'
   }).join('')
 }
 function sidebarHtml(){
@@ -143,17 +144,26 @@ function graphHtml(){
     '</section></div>'
 }
 function breadcrumb(path){
-  const parts=path.split('/')
-  const rootPath=parts[0]==='products'?'products':'playbooks'
-  const links=parts.map((part,i)=>{
-    if(i===0)return '<a data-section="'+rootPath+'" href="'+docUrl(rootPath)+'">'+esc(part)+'</a>'
-    if(i===parts.length-1)return '<span aria-current="page">'+esc(part)+'</span>'
-    return '<span>'+esc(part)+'</span>'
-  })
-  return '<nav class="breadcrumbs" aria-label="Breadcrumb">'+links.join('<span class="breadcrumb-divider">/</span>')+'</nav>'
+ const parts=path.split('/')
+ return '<nav class="breadcrumbs" aria-label="Breadcrumb">'+parts.map((part,i)=>{
+   const target=parts.slice(0,i+1).join('/')
+   const current=i===parts.length-1
+   const file=current&&path.endsWith('.md')
+   const valid=file?!!documents[target]:!!folders[target]
+   if(!valid)return '<span>'+esc(part)+'</span>'
+   return '<a '+(file?'data-doc':'data-section')+'="'+esc(target)+'" href="'+docUrl(target)+'"'+(current?' aria-current="page" class="breadcrumb-current"':'')+'>'+esc(part)+'</a>'
+ }).join('<span class="breadcrumb-divider">/</span>')+'</nav>'
 }
-function productOverview(){
-  return '<div class="article-wrap">'+breadcrumb('products')+'<h1 class="document-title">Products</h1><p class="doc-description">제품별 기준과 예외를 기록하는 문서입니다.</p><div class="product-list">'+products.map(path=>'<a data-doc="'+esc(path)+'" href="'+docUrl(path)+'"><span class="doc-icon">▧</span><span><strong>'+esc(label(path))+'</strong><small>'+esc(path)+'</small></span><span class="chevron">↗</span></a>').join('')+'</div></div>'
+function folderHtml(folder){
+ const doc=documents[folders[folder]]
+ if(!doc)return ''
+ if(folder==='playbooks')return graphHtml()
+ const subfolders=Object.keys(folders).filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
+ const files=[...playbooks,...products].filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
+ const children=[...subfolders.map(path=>({path,folder:true})),...files.map(path=>({path,folder:false}))]
+ return '<div class="article-wrap">'+breadcrumb(folder)+'<h1 class="document-title">'+esc(label(folder))+'</h1>'+
+ propertyHtml(doc)+'<div class="markdown">'+markdownHtml(doc)+'</div>'+
+ (children.length?'<div class="folder-children">'+children.map(item=>'<a href="'+docUrl(item.path)+'" '+(item.folder?'data-section':'data-doc')+'="'+esc(item.path)+'"><span class="folder-child-icon">'+(item.folder?'▤':'▧')+'</span><strong>'+esc(label(item.path))+'</strong><span class="folder-child-arrow">›</span></a>').join('')+'</div>':'')+'</div>'
 }
 function articleHtml(doc){
  const incoming=Object.values(documents).filter(source=>{
