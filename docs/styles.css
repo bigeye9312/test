@@ -181,3 +181,8 @@ details.callout>summary.callout-title{cursor:pointer;list-style:revert;padding:0
   display:block;
   stroke:currentColor;
 }
+
+/* Backlinks: an outward arrow per reference, mirroring # prefixes on tags. */
+.metadata-items:not(.metadata-tags){column-gap:12px;row-gap:5px}
+.meta-backlink{display:inline-flex;align-items:baseline;gap:4px;white-space:normal}
+.meta-backlink-arrow{color:#989898;font-size:12px;font-weight:500;line-height:1}
