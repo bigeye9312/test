@@ -100,12 +100,24 @@ function resolveLink(href,docPath){
   return documents[candidate]?candidate:null
 }
 function markdownHtml(doc){return window.noteMarkdown.render(doc,documents,docUrl,label)}
-function pageTags(doc){
+function incomingLinks(doc){
+ return Object.values(documents).filter(source=>{
+   if(source.path===doc.path)return false
+   const wiki=window.noteMarkdown.refs(source.body).some(ref=>window.noteMarkdown.resolve(ref,source.path,documents)?.path===doc.path)
+   const standard=[...source.body.matchAll(/\]\(([^)#]+)(?:#[^)]*)?\)/g)].some(match=>resolveLink(match[1],source.path)===doc.path)
+   return wiki||standard
+ })
+}
+function pageMetadata(doc){
  const tags=Array.isArray(doc?.meta?.tags)?doc.meta.tags:[]
- if(!tags.length)return ''
- return '<footer class="page-tags" aria-label="Page labels"><span class="page-tags-label">Labels</span><div class="page-tags-list">'+
-   tags.map(tag=>'<button type="button" class="tag-pill" data-tag="'+esc(tag)+'">'+esc(tag)+'</button>').join('')+
-   '</div></footer>'
+ const incoming=incomingLinks(doc)
+ if(!tags.length&&!incoming.length)return ''
+ const backlinks=incoming.map(source=>'<a class="meta-backlink" data-doc="'+esc(source.path)+'" href="'+docUrl(source.path)+'" title="'+esc(source.path)+'">'+esc(label(source.path))+'</a>').join('<span class="meta-separator">·</span>')
+ const tagLinks=tags.map(tag=>'<button type="button" class="meta-tag" data-tag="'+esc(tag)+'">#'+esc(tag)+'</button>').join('')
+ return '<footer class="page-metadata" aria-label="Page metadata">'+
+   (incoming.length?'<div class="metadata-row"><span class="metadata-icon" role="img" aria-label="Backlinks">🔗</span><div class="metadata-items">'+backlinks+'</div></div>':'')+
+   (tags.length?'<div class="metadata-row"><span class="metadata-icon" role="img" aria-label="Tags">🏷️</span><div class="metadata-items metadata-tags">'+tagLinks+'</div></div>':'')+
+   '</footer>'
 }
 function graphHtml(){
   const current=playbooks.find(path=>pathSlug(path)===graphFocus)
@@ -138,7 +150,7 @@ function graphHtml(){
     filters+groups+display+forces+'</aside>'+
     '<div class="graph-canvas-controls"><button data-zoom-in title="Zoom in" aria-label="Zoom in">+</button><button data-zoom-out title="Zoom out" aria-label="Zoom out">−</button><span class="graph-node-count" aria-live="polite">0 nodes</span></div>'+
     
-    '</section>'+pageTags(documents[folders.playbooks])+'</div>'
+    '</section>'+pageMetadata(documents[folders.playbooks])+'</div>'
 }
 function breadcrumb(path){
  const parts=path.split('/')
@@ -160,20 +172,12 @@ function folderHtml(folder){
  const children=[...subfolders.map(path=>({path,folder:true})),...files.map(path=>({path,folder:false}))]
  return '<div class="article-wrap">'+breadcrumb(folder)+'<h1 class="document-title">'+esc(label(folder))+'</h1>'+
  '<div class="markdown">'+markdownHtml(doc)+'</div>'+
- (children.length?'<div class="folder-children">'+children.map(item=>'<a href="'+docUrl(item.path)+'" '+(item.folder?'data-section':'data-doc')+'="'+esc(item.path)+'"><span class="folder-child-icon">'+(item.folder?'▤':'▧')+'</span><strong>'+esc(label(item.path))+'</strong><span class="folder-child-arrow">›</span></a>').join('')+'</div>':'')+pageTags(doc)+'</div>'
+ (children.length?'<div class="folder-children">'+children.map(item=>'<a href="'+docUrl(item.path)+'" '+(item.folder?'data-section':'data-doc')+'="'+esc(item.path)+'"><span class="folder-child-icon">'+(item.folder?'▤':'▧')+'</span><strong>'+esc(label(item.path))+'</strong><span class="folder-child-arrow">›</span></a>').join('')+'</div>':'')+pageMetadata(doc)+'</div>'
 }
 function articleHtml(doc){
- const incoming=Object.values(documents).filter(source=>{
-   if(source.path===doc.path)return false
-   const wiki=window.noteMarkdown.refs(source.body).some(ref=>window.noteMarkdown.resolve(ref,source.path,documents)?.path===doc.path)
-   const standard=[...source.body.matchAll(/\]\(([^)#]+)(?:#[^)]*)?\)/g)].some(match=>resolveLink(match[1],source.path)===doc.path)
-   return wiki||standard
- })
- const links=incoming.map(source=>'<a class="backlink" data-doc="'+esc(source.path)+'" href="'+docUrl(source.path)+'"><span>↗</span><span><strong>'+esc(label(source.path))+'</strong><small>'+esc(source.path)+'</small></span></a>').join('')
+
  return '<div class="article-wrap">'+breadcrumb(doc.path)+'<h1 class="document-title">'+esc(label(doc.path))+'</h1>'+
- '<article class="markdown">'+markdownHtml(doc)+'</article>'+
- '<section class="references"><div class="references-heading">Backlinks <span>'+incoming.length+'</span></div>'+
- (links||'<p class="empty-backlinks">No backlinks</p>')+'</section>'+pageTags(doc)+'</div>'
+ '<article class="markdown">'+markdownHtml(doc)+'</article>'+pageMetadata(doc)+'</div>'
 }
 function mainHtml(){
   return folders[selected]?folderHtml(selected):articleHtml(documents[selected])
