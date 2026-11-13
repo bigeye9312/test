@@ -64,6 +64,9 @@
         for (const neighbor of adjacency.get(id) || []) visible.add(neighbor)
       }
     }
+    if (options.orphans === false) {
+      visible = new Set([...visible].filter(id => (adjacency.get(id)?.size || 0) > 0))
+    }
     const nodes = allNodes.filter(node => visible.has(node.id)).map(node => ({...node}))
     const edges = allEdges.filter(edge => visible.has(edge.source) && visible.has(edge.target))
       .map(edge => ({...edge}))
@@ -77,6 +80,7 @@
     const nodeLayer = viewport.append('g')
     const linkSelection = edgeLayer.selectAll('line').data(edges).join('line')
       .attr('class', d => 'graph-edge ' + (d.type === 'related' ? 'related' : 'conditional'))
+      .style('stroke-width', Number(options.linkThickness) || 1)
     const nodeSelection = nodeLayer.selectAll('g').data(nodes).join('g')
       .attr('class', d => 'force-node' + (d.id === selectedId ? ' is-focus' : ''))
       .attr('role', 'button').attr('tabindex', 0)
@@ -84,18 +88,19 @@
     nodeSelection.append('circle').attr('class', 'node-halo').attr('r', 18)
       .attr('fill', d => palette[d.category] || palette.default)
     nodeSelection.append('circle').attr('class', 'node-core')
-      .attr('r', d => d.id === selectedId ? 10 : 7)
+      .attr('r', d => (Number(options.nodeSize) || 7) + (d.id === selectedId ? 3 : 0))
       .attr('fill', d => palette[d.category] || palette.default)
     nodeSelection.append('text').attr('class', 'node-title').attr('text-anchor', 'middle')
       .attr('dy', 30).text(d => d.title)
+      .style('display', options.showLabels === false ? 'none' : null)
 
     const zoom = d3.zoom().scaleExtent([.45, 3])
       .filter(e => e.type !== 'dblclick' && !e.button)
       .on('zoom', event => viewport.attr('transform', event.transform))
     svg.call(zoom).on('dblclick.zoom', null)
     const simulation = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(edges).id(d => d.id).distance(mode === 'local' ? 150 : 135).strength(.5))
-      .force('charge', d3.forceManyBody().strength(-410))
+      .force('link', d3.forceLink(edges).id(d => d.id).distance(Number(options.linkDistance) || (mode === 'local' ? 150 : 135)).strength(.5))
+      .force('charge', d3.forceManyBody().strength(-(Number(options.repel) || 410)))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide(67))
       .alphaDecay(.036)
