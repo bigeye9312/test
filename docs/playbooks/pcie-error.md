@@ -6,6 +6,9 @@ tags: [area/error, pcie, aer]
 AER와 Link 관련 증거를 수집하고 상관성을 점검합니다.
 
 ## 확인할 사항
+
+관련 체크리스트: [[playbooks/pcie-enumeration#먼저 확인할 것|PCIe 인식 확인 항목]]
+
 - 오류가 보고된 시점과 장애 시점
 - AER의 종류 및 수집 범위
 - Link Width / Generation Speed 변화
