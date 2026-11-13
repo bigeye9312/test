@@ -118,7 +118,7 @@ function graphHtml(){
     '<label class="settings-search"><span>⌕</span><input id="graph-search" type="search" placeholder="Search" value="'+esc(graphFilter)+'" aria-label="Search files"></label>'+
     '<label class="settings-toggle"><span>Orphans</span><input type="checkbox" data-graph-option="orphans"'+checked('orphans')+'><i></i></label>'+
     '</div></details>'
-  const groups='<details open><summary>Groups</summary><div class="settings-group"><div class="settings-caption">Color by tags</div>'+
+  const groups='<details><summary>Groups</summary><div class="settings-group"><div class="settings-caption">Color by tags</div>'+
     Object.entries(categories).map(([key,val])=>'<div class="settings-group-row"><span>#area/'+esc(key)+'</span><i class="settings-color" style="background:'+val.color+'"></i></div>').join('')+
     '</div></details>'
   const display='<details><summary>Display</summary><div class="settings-group">'+
