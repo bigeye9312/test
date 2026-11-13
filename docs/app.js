@@ -56,7 +56,7 @@ function tree(paths,prefix){
 function treeHtml(entries,prefix='',depth=0){
   return Object.entries(entries).sort(([a],[b])=>a.localeCompare(b)).map(([name,value])=>{
     if(typeof value==='string'){
-      if(search&&!((label(value)+' '+value+' '+(documents[value]?.meta.tags||[]).join(' ')).toLowerCase().includes(search.toLowerCase())))return ''
+      if(search&&!([label(value),value,...(documents[value]?.meta.tags||[]),documents[value]?.body||''].join(' ').toLowerCase().includes(search.toLowerCase())))return ''
       return '<a class="tree-item'+(selected===value?' selected':'')+'" style="--level:'+depth+'" data-doc="'+esc(value)+'" href="'+docUrl(value)+'"><span class="tree-icon tree-leaf-dot" aria-hidden="true"></span><span class="tree-label">'+esc(label(value))+'</span></a>'
     }
     const id=prefix+name+'/'
@@ -74,8 +74,8 @@ function sidebarHtml(){
  }
  const nav=sidebarOrder.map(key=>{
   const section=sections[key]
-  const content=expanded.has(key)?treeHtml(tree(section.paths,key+'/'),key+'/'):''
-  return '<div class="tree-section"><div class="section-row"><button data-section="'+key+'" class="section-link'+(selected===key?' selected':'')+'">'+esc(sidebarFolderLabel(key))+'</button><button class="section-toggle" data-top="'+key+'" aria-label="Toggle '+section.label+'">'+(expanded.has(key)?'⌄':'›')+'</button></div>'+content+'</div>'
+  const content=(search||expanded.has(key))?treeHtml(tree(section.paths,key+'/'),key+'/'):''
+  return '<div class="tree-section"><div class="section-row"><button data-section="'+key+'" class="section-link'+(selected===key?' selected':'')+'">'+esc(sidebarFolderLabel(key))+'</button><button class="section-toggle" data-top="'+key+'" aria-label="Toggle '+section.label+'">'+((search||expanded.has(key))?'⌄':'›')+'</button></div>'+content+'</div>'
  }).join('')
  return '<aside class="sidebar" id="wiki-sidebar">'+sidebarToggleHtml()+'<a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Government building">🏛️</span> CIA</a>'+
  '<div class="sidebar-search"><span class="search-icon" aria-hidden="true">⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
