@@ -1,56 +1,51 @@
-# SSD Analysis Playbook — Proof of Concept
+# SSD Analysis Playbook (prototype)
 
-SSD 분석용 Markdown Playbook을 GitHub Pages의 **main /docs**에서 직접 보여주는 정적 데모입니다. 모든 SSD 제품값과 분석 절차는 **가상 예시**입니다.
+SSD 분석 방법론을 문서화하고 탐색하는 실험용 사이트입니다. **모든 SSD 예시 및 수치는 가상 데이터입니다.**
 
-## 구조
+## 웹사이트 구조
 
-- `docs/index.html`, `docs/app.js`, `docs/styles.css`: 문서 트리 + Playbook 관계 그래프 뷰어
-- `docs/manifest.json`: 사이드바에서 보여줄 Markdown 파일 경로 목록 (하위 폴더 자동 표시)
-- `docs/playbooks/*.md`: 공통 분석 관점 및 Frontmatter
-- `docs/products/**/*.md`: 제품별 기준 (가상 값)
+- **왼쪽:** `Playbooks` / `Products` 문서 트리 (폴더 중첩 지원)
+- **Playbooks 메인:** Obsidian 스타일의 인터랙티브 관계 그래프 (D3 force)
+- **문서 선택:** Markdown 본문, Frontmatter `title` / `description` / `tags` / `aliases` 표시
+- **링크 관계:** Playbook Frontmatter의 커스텀 `links`를 읽어 그래프 연결선을 생성
+- **그래프 조작:** 마우스 드래그로 노드 이동·배경 이동, 휠 확대/축소, 노드 호버 강조, 클릭하여 문서 열기, 초기화
 
-## 게시 설정 (최초 1회)
+## 소스 레이아웃
 
-저장소 **Settings → Pages → Build and deployment**에서:
-1. Source: **Deploy from a branch**
-2. Branch: **main**
-3. Folder: **/docs**
-4. Save
+```text
+docs/
+├── index.html              # UI 엔트리
+├── app.js                  # 문서 트리와 Markdown 뷰어
+├── graph.js                # D3 force 인터랙티브 그래프
+├── styles.css
+├── manifest.json           # 브라우저에서 읽을 Markdown 파일 목록
+├── playbooks/              # 공통 분석 방법론
+├── products/               # 제품별 가상 설정
+└── _quartz/                # 비교용 Quartz 빌드 도구 및 출력 경로
+```
 
-게시 주소: https://bigeye9312.github.io/test/
+`docs/_quartz/`와 HTML/JS/CSS는 사이드바 목록에 포함되지 않습니다. 사이드바는 `docs/manifest.json`의 문서 경로로만 구성됩니다.
 
-별도 `npm install`, `vite build`, GitHub Actions 배포 설정은 필요하지 않습니다. `docs/` 파일 수정 후 push하면 GitHub Pages가 게시 내용을 갱신합니다.
+## GitHub Pages: 커스텀 UI 사용
 
-## 로컬 확인
+Settings → Pages → **Deploy from a branch → main /docs**를 선택하면 됩니다.
+
+웹사이트 주소: https://bigeye9312.github.io/test/
+
+이 방식은 정적 HTML/JavaScript를 게시하므로 **npm 빌드가 필요하지 않습니다.** JavaScript 라이브러리 `js-yaml`, `marked`, `DOMPurify`, `D3`는 브라우저에서 CDN을 통해 로드합니다.
 
 ```bash
 python -m http.server 8000 --directory docs
 ```
-브라우저에서 http://localhost:8000/ 을 여세요. `file://`에서는 `fetch()`가 제한될 수 있습니다.
 
-## 의존성 및 한계
+위 명령으로 로컬 테스트할 수 있습니다. 새 Markdown은 `docs/manifest.json`에 경로를 추가하세요.
 
-브라우저에서 `js-yaml`, `marked`, `DOMPurify`를 CDN에서 로드합니다. 각 Markdown은 `app.js`의 `playbookFiles` 목록에 등록해야 탐색할 수 있습니다. Frontmatter `links`는 Obsidian/Quartz의 공식 필드가 아닌 **이 데모 전용 분석 관계**입니다.
+## Quartz 비교 실험
 
-Private Repository의 Pages 게시 가능 여부는 GitHub 요금제와 설정에 따라 달라지며, Pages 사이트 자체가 공개될 수 있습니다. 사내 데이터는 넣지 마세요.
+Quartz용 스크립트는 `docs/_quartz/`에 있으며 GitHub Actions 워크플로는 GitHub 규정에 따라 `.github/workflows/quartz-pages.yml`에 있습니다. Quartz를 배포하려면 Pages Source를 **GitHub Actions**로 변경해야 합니다. 이 경우 커스텀 뷰어 대신 Quartz 사이트가 배포됩니다. 두 배포 방식을 동시에 활성화하지 않습니다.
 
-## Quartz Graph 비교 데모
+## 주의
 
-동일한 `docs/playbooks/`, `docs/products/` Markdown으로 **Quartz 4의 Local / Global Graph**를 표시하는 별도 빌드 예시를 추가했습니다.
-
-- [Quartz 예제 구성 및 적용 방법](quartz-example/README.md)
-- [Quartz GitHub Actions 빌드](.github/workflows/quartz-pages.yml)
-
-Quartz를 공개 Pages의 실제 렌더러로 사용하려면 GitHub 저장소 **Settings → Pages → Source: GitHub Actions**로 바꿔 주세요. 그러면 `docs/`의 문서들을 Quartz가 빌드해 게시합니다. `/docs` 직접 게시는 이전 프로토타입 비교용으로 유지할 수 있지만, Pages 배포 소스는 하나만 선택할 수 있습니다.
-
-**npm은 Quartz 빌드 환경에서만 사용합니다.** 문서를 읽거나 편집하는 사람은 설치할 필요가 없습니다.
-
-
-## 현재 화면 구조
-
-- **왼쪽**: Playbooks / Products 폴더 트리. 디렉터리가 깊어지면 하위 계층으로 표시됩니다.
-- **Playbooks 클릭**: Playbook 간 Frontmatter `links` 관계를 그래프로 표시합니다. 노드를 누르면 문서를 엽니다.
-- **개별 문서 클릭**: Markdown 본문을 렌더링하고, Frontmatter의 `title`, `description`, `tags`, `aliases`를 상단에 정리합니다. 원본 YAML은 표시하지 않습니다.
-- **새 문서 추가**: Markdown 파일을 만들고 `docs/manifest.json`의 적절한 목록에 경로를 한 줄 추가합니다.
-
-이 정적 뷰어의 그래프는 Quartz 내장 그래프가 아니라, 데모용 SVG 그래프입니다. 별도의 Quartz 예제는 `quartz-example/`에 남겨두었습니다.
+- `links`는 Quartz 또는 Obsidian의 공식 Frontmatter 표준이 아닌 데모 전용 관계 스키마입니다.
+- 그래프는 관계 탐색용이며 분석 절차를 자동 실행하거나 인과관계를 증명하지 않습니다.
+- Private 저장소라도 게시된 Pages 사이트가 공개될 수 있습니다. 실제 사내 Dump, 임계값 및 기밀 기술문서는 업로드하지 마세요.
