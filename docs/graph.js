@@ -125,9 +125,9 @@
       if (!nodes.length) return
       const xMin = d3.min(nodes, d => d.x), xMax = d3.max(nodes, d => d.x)
       const yMin = d3.min(nodes, d => d.y), yMax = d3.max(nodes, d => d.y)
-      const padding = 85
-      const scale = Math.min(1.8, (width - 2 * padding) / Math.max(1, xMax - xMin),
-        (height - 2 * padding) / Math.max(1, yMax - yMin))
+      const paddingX = 36, paddingY = 42
+      const scale = Math.min(2.5, (width - 2 * paddingX) / Math.max(1, xMax - xMin),
+        (height - 2 * paddingY) / Math.max(1, yMax - yMin))
       const cx = (xMin + xMax) / 2, cy = (yMin + yMax) / 2
       svg.call(zoom.transform, d3.zoomIdentity
         .translate(width / 2 - cx * scale, height / 2 - cy * scale)
