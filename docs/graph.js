@@ -57,9 +57,6 @@
     const counter = panel.querySelector('.graph-node-count')
     if (counter) counter.textContent = nodes.length + ' nodes'
     const selectedId = mode === 'local' && focus ? focus.id : null
-    panel.classList.toggle('is-local', mode === 'local')
-    const focusLabel = panel.querySelector('.graph-focus-label')
-    if (focusLabel) focusLabel.textContent = selectedId ? 'LOCAL · ' + focus.title : ''
     const width = 960, height = 560
     const svg = d3.select(canvas).append('svg')
       .attr('viewBox', '0 0 ' + width + ' ' + height)
@@ -77,21 +74,15 @@
       .attr('cursor', 'pointer')
     nodeSelection.append('title').text(d => d.title + (mode === 'local' ? ' · Click: open · Shift+click: explore' : ' · Click: explore'))
     nodeSelection.filter(d => d.id === selectedId).append('circle')
-      .attr('class', 'node-focus-ring').attr('r', (Number(options.nodeSize) || 7) + 11)
+      .attr('class', 'node-focus-ring').attr('r', (Number(options.nodeSize) || 7) + 12)
     nodeSelection.append('circle').attr('class', 'node-halo').attr('r', 18)
       .attr('fill', d => palette[d.category] || palette.default)
     nodeSelection.append('circle').attr('class', 'node-core')
-      .attr('r', d => (Number(options.nodeSize) || 7) + (d.id === selectedId ? 3 : 0))
+      .attr('r', d => (Number(options.nodeSize) || 7) + (d.id === selectedId ? 5 : 0))
       .attr('fill', d => palette[d.category] || palette.default)
     const showLabels = options.showLabels !== false
-    if (showLabels && mode === 'local') {
-      nodeSelection.append('rect').attr('class', 'node-label-bg')
-        .attr('x', d => -Math.min(d.title.length, 30) * 3.2 - 8)
-        .attr('y', 17).attr('rx', 4).attr('height', 21)
-        .attr('width', d => Math.min(d.title.length, 30) * 6.4 + 16)
-    }
     nodeSelection.append('text').attr('class', 'node-title').attr('text-anchor', 'middle')
-      .attr('dy', 31).text(d => mode === 'local' && d.title.length > 30 ? d.title.slice(0, 29) + '…' : d.title)
+      .attr('dy', 31).text(d => d.title)
       .style('display', showLabels ? null : 'none')
 
     const zoom = d3.zoom().scaleExtent([.08, 4])
@@ -105,7 +96,7 @@
       .force('charge', d3.forceManyBody().strength(-(local ? Math.max(330, Number(options.repel) || 180) : (Number(options.repel) || 180))))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide(d => local && showLabels
-        ? Math.max(54, Math.min(d.title.length, 30) * 3.2 + 12) : nodeRadius + 9))
+        ? Math.max(60, d.title.length * 3.2 + 14) : nodeRadius + 9))
       .alphaDecay(.036)
       .on('tick', () => {
         linkSelection.attr('x1', d => d.source.x).attr('y1', d => d.source.y)

@@ -133,7 +133,7 @@ function graphHtml(){
     slider('repel',80,900,20,'Repel force')+slider('linkDistance',30,260,10,'Link distance')+
     '</div></details>'
   return '<div class="graph-workspace">'+breadcrumb('playbook')+'<h1 class="graph-page-title">'+esc(label('playbook'))+'</h1><section class="graph-shell" aria-label="Interactive Playbook Graph">'+
-    '<div class="graph-head"><div class="graph-local-info"><span class="graph-focus-label"></span><span class="graph-local-hint">Click to open · Shift+click to explore</span></div><div class="graph-head-actions">'+
+    '<div class="graph-head"><div class="graph-head-actions">'+
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '</div></div>'+
     '<div class="graph-canvas"></div>'+
