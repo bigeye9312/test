@@ -1,10 +1,11 @@
-name: Build Quartz Graph example
+name: Build and deploy Quartz from docs
 on:
   push:
     branches: [main]
     paths:
-      - 'docs/**'
-      - 'quartz-example/**'
+      - 'docs/playbooks/**'
+      - 'docs/products/**'
+      - 'docs/_quartz/*.py'
       - '.github/workflows/quartz-pages.yml'
   workflow_dispatch:
 
@@ -23,43 +24,38 @@ jobs:
     steps:
       - name: Check out playbook repository
         uses: actions/checkout@v4
-      - name: Fetch Quartz 4
-        run: git clone --depth 1 --branch v4 https://github.com/jackyzha0/quartz.git quartz-site
-      - name: Prepare docs content for Quartz
-        run: python quartz-example/prepare_content.py
-      - name: Configure Quartz site
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path("quartz-site/quartz.config.ts")
-          content = p.read_text()
-          content = content.replace('pageTitle: "Quartz 4"', 'pageTitle: "SSD Analysis Playbook"')
-          content = content.replace('baseUrl: "quartz.jzhao.xyz"', 'baseUrl: "bigeye9312.github.io/test"')
-          content = content.replace('provider: "plausible"', 'provider: "none"')
-          p.write_text(content)
-          PY
+      - name: Fetch Quartz 4 inside docs
+        run: git clone --depth 1 --branch v4 https://github.com/jackyzha0/quartz.git docs/_quartz/.engine
+      - name: Prepare Quartz content
+        run: python docs/_quartz/prepare_content.py
+      - name: Configure Quartz
+        run: python docs/_quartz/configure.py
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Install Quartz dependencies
-        working-directory: quartz-site
+        working-directory: docs/_quartz/.engine
         run: npm ci --no-audit --no-fund
       - name: Build Quartz
-        working-directory: quartz-site
+        working-directory: docs/_quartz/.engine
         run: npx quartz build
+      - name: Store generated files inside docs
+        run: |
+          mkdir -p docs/_quartz/dist
+          cp -a docs/_quartz/.engine/public/. docs/_quartz/dist/
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload generated site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: quartz-site/public
+          path: docs/_quartz/dist
   deploy:
     needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
       - name: Publish
         id: deployment
