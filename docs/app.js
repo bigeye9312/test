@@ -18,7 +18,7 @@ let documents={}, playbooks=[], products=[]
 let selected='playbooks', expanded=new Set(['playbooks','products'])
 let search='', mode='files', showProperties=true, graphFilter=''
 let graphMode='global', graphCategory='discovery', graphFocus=null, graphDepth=1
-let graphSettingsOpen=false
+let graphSettingsOpen=true
 let graphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:410, linkDistance:135, showLabels:true}
 
 const docUrl = path => path==='playbooks'||path==='products'?'?view='+path:'?doc='+encodeURIComponent(path)
