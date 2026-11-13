@@ -1,6 +1,5 @@
-/* Interactive Obsidian-inspired graph for the static docs viewer.
- * Derived from Markdown frontmatter; no Quartz runtime required.
- * Requires D3 v7 loaded before app.js. */
+/* D3 force-directed graph for the Markdown knowledge base.
+ * Graph nodes and links are derived only from docs/playbooks frontmatter. */
 (() => {
   const palette = {
     discovery: '#8f9ec9',
@@ -8,145 +7,136 @@
     error: '#d19a9a',
     performance: '#c9b17f',
     internal: '#86bca8',
-    default: '#a7a7a7',
+    default: '#a7a7a7'
   }
-  let dispose = () => {}
-  window.filterPlaybookGraph = () => {}
-  const svgNS = 'http://www.w3.org/2000/svg'
+  let release = () => {}
+  window.disposePlaybookGraph = () => release()
 
-  window.disposePlaybookGraph = () => dispose()
-
-  window.mountPlaybookGraph = (container, paths, docs, navigate) => {
-    dispose()
+  window.mountPlaybookGraph = (panel, paths, documents, options) => {
+    release()
     const d3 = window.d3
-    if (!d3) {
-      container.textContent = '그래프 라이브러리를 불러올 수 없습니다. 연결 상태를 확인하세요.'
+    const canvas = panel?.querySelector('.graph-canvas')
+    if (!d3 || !canvas) {
+      if (canvas) canvas.textContent = 'Graph renderer unavailable'
       return
     }
-    const width = 960
-    const height = 600
-    const nodes = paths.map(path => ({
-      id: String(docs[path].meta.id || path),
+    const allNodes = paths.map(path => ({
+      id: String(documents[path].meta.id || path),
       path,
-      title: String(docs[path].meta.title || path.split('/').pop()),
-      category: String(docs[path].meta.category || 'default'),
-      tags: docs[path].meta.tags || [],
+      title: String(documents[path].meta.title || path.split('/').pop()),
+      category: String(documents[path].meta.category || 'default'),
+      tags: documents[path].meta.tags || []
     }))
-    const ids = new Set(nodes.map(node => node.id))
-    const links = paths.flatMap(path => {
-      const src = docs[path].meta.id || path
-      return (docs[path].meta.links || [])
-        .filter(ref => ids.has(ref.to))
-        .map(ref => ({ source: src, target: ref.to, type: ref.type || 'related' }))
+    const byId = new Map(allNodes.map(node => [node.id, node]))
+    const allEdges = paths.flatMap(path => {
+      const origin = documents[path].meta.id || path
+      return (documents[path].meta.links || [])
+        .filter(link => byId.has(link.to))
+        .map(link => ({ source: origin, target: link.to, type: link.type || 'related' }))
     })
-    const neighbors = new Map(nodes.map(n => [n.id, new Set([n.id])]))
-    links.forEach(link => {
-      neighbors.get(link.source)?.add(link.target)
-      neighbors.get(link.target)?.add(link.source)
-    })
-
-    const canvas = container.querySelector('.graph-canvas')
-    if (!canvas) return
+    const adjacency = new Map(allNodes.map(node => [node.id, new Set()]))
+    for (const edge of allEdges) {
+      adjacency.get(edge.source)?.add(edge.target)
+      adjacency.get(edge.target)?.add(edge.source)
+    }
+    const mode = options.mode || 'global'
+    const focus = byId.get(options.focus) || allNodes[0]
+    const depth = Math.max(1, Math.min(2, Number(options.depth) || 1))
+    let visible = new Set(allNodes.map(node => node.id))
+    if (mode === 'local' && focus) {
+      visible = new Set([focus.id])
+      let frontier = new Set([focus.id])
+      for (let i = 0; i < depth; i++) {
+        const next = new Set()
+        for (const id of frontier) {
+          for (const neighbor of adjacency.get(id) || []) {
+            if (!visible.has(neighbor)) next.add(neighbor)
+            visible.add(neighbor)
+          }
+        }
+        frontier = next
+      }
+    } else if (mode === 'category' && options.category) {
+      const primary = allNodes.filter(node => node.category === options.category).map(node => node.id)
+      visible = new Set(primary)
+      // Show first-hop cross-category context without hiding the relationship.
+      for (const id of primary) {
+        for (const neighbor of adjacency.get(id) || []) visible.add(neighbor)
+      }
+    }
+    const nodes = allNodes.filter(node => visible.has(node.id)).map(node => ({...node}))
+    const edges = allEdges.filter(edge => visible.has(edge.source) && visible.has(edge.target))
+      .map(edge => ({...edge}))
+    const selectedId = mode === 'local' && focus ? focus.id : null
+    const width = 960, height = 560
     const svg = d3.select(canvas).append('svg')
       .attr('viewBox', '0 0 ' + width + ' ' + height)
-      .attr('role', 'img')
-      .attr('aria-label', 'Playbooks 상호작용 그래프: 노드를 클릭하면 문서가 열립니다')
-    const defs = svg.append('defs')
-    const glow = defs.append('filter').attr('id', 'graph-node-glow')
-      .attr('x', '-100%').attr('y', '-100%')
-      .attr('width', '300%').attr('height', '300%')
-    glow.append('feGaussianBlur').attr('stdDeviation', 6)
-    const viewport = svg.append('g').attr('class', 'graph-viewport')
-    const linkLayer = viewport.append('g').attr('class', 'graph-links')
-    const nodeLayer = viewport.append('g').attr('class', 'graph-nodes')
-    const edgeSel = linkLayer.selectAll('line').data(links).join('line')
-      .attr('class', link => link.type === 'related' ? 'graph-edge related' : 'graph-edge conditional')
-    const nodeSel = nodeLayer.selectAll('g').data(nodes).join('g')
-      .attr('class', 'force-node')
-      .attr('tabindex', 0)
-      .attr('role', 'button')
-      .attr('aria-label', d => d.title + ' 문서 열기')
-    nodeSel.append('circle').attr('class', 'node-halo')
-      .attr('r', 15)
+      .attr('role', 'group').attr('aria-label', 'Interactive playbook graph')
+    const viewport = svg.append('g')
+    const edgeLayer = viewport.append('g')
+    const nodeLayer = viewport.append('g')
+    const linkSelection = edgeLayer.selectAll('line').data(edges).join('line')
+      .attr('class', d => 'graph-edge ' + (d.type === 'related' ? 'related' : 'conditional'))
+    const nodeSelection = nodeLayer.selectAll('g').data(nodes).join('g')
+      .attr('class', d => 'force-node' + (d.id === selectedId ? ' is-focus' : ''))
+      .attr('role', 'button').attr('tabindex', 0)
+      .attr('aria-label', d => d.title + ', select local graph; select again to open document')
+    nodeSelection.append('circle').attr('class', 'node-halo').attr('r', 18)
       .attr('fill', d => palette[d.category] || palette.default)
-    nodeSel.append('circle').attr('class', 'node-core')
-      .attr('r', d => 7 + Math.min(links.filter(l => l.source === d.id || l.target === d.id).length, 4))
+    nodeSelection.append('circle').attr('class', 'node-core')
+      .attr('r', d => d.id === selectedId ? 10 : 7)
       .attr('fill', d => palette[d.category] || palette.default)
-    nodeSel.append('text').attr('class', 'node-title')
-      .attr('dy', 30).attr('text-anchor', 'middle')
-      .text(d => d.title)
+    nodeSelection.append('text').attr('class', 'node-title').attr('text-anchor', 'middle')
+      .attr('dy', 30).text(d => d.title)
 
-    const info = container.querySelector('.graph-info')
-    const defaultInfo = info ? info.textContent : ''
-    const zoom = d3.zoom().scaleExtent([0.45, 3.0])
-      .filter(e => !e.button && (e.type !== 'dblclick'))
+    const zoom = d3.zoom().scaleExtent([.45, 3])
+      .filter(e => e.type !== 'dblclick' && !e.button)
       .on('zoom', event => viewport.attr('transform', event.transform))
     svg.call(zoom).on('dblclick.zoom', null)
-
     const simulation = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(links).id(d => d.id).distance(135).strength(0.44))
-      .force('charge', d3.forceManyBody().strength(-480))
-      .force('center', d3.forceCenter(width/2, height/2))
-      .force('collide', d3.forceCollide(58).iterations(2))
-      .alphaDecay(0.027)
+      .force('link', d3.forceLink(edges).id(d => d.id).distance(mode === 'local' ? 150 : 135).strength(.5))
+      .force('charge', d3.forceManyBody().strength(-410))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('collision', d3.forceCollide(67))
+      .alphaDecay(.036)
       .on('tick', () => {
-        edgeSel
-          .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+        linkSelection.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
           .attr('x2', d => d.target.x).attr('y2', d => d.target.y)
-        nodeSel.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
+        nodeSelection.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
       })
-
-    // ForceLink mutates source/target into objects after simulation initializes.
-    let activeFilter = ''
-    function applyFilter(query) {
-      activeFilter = (query || '').trim().toLowerCase()
-      if (!activeFilter) {
-        clearRelations()
-        return
-      }
-      const matching = new Set(nodes.filter(node =>
-        (node.title + ' ' + node.id + ' ' + (node.tags || []).join(' ')).toLowerCase().includes(activeFilter)
-      ).map(node => node.id))
-      nodeSel.classed('dimmed', d => !matching.has(d.id)).classed('focused', d => matching.has(d.id))
-      edgeSel.classed('dimmed', link => !matching.has(link.source.id) && !matching.has(link.target.id))
-      if (info) info.textContent = matching.size + '개 노드가 검색어와 일치합니다'
+    // d3.forceLink converts edge source and target strings to node objects.
+    const info = panel.querySelector('.graph-info')
+    const updateInfo = text => { if (info) info.textContent = text }
+    const defaultInfo = mode === 'local' && focus
+      ? focus.title + ' · ' + nodes.length + ' nodes · Select focused node to open document'
+      : nodes.length + ' nodes · Select node to explore locally'
+    updateInfo(defaultInfo)
+    const matches = d => (d.title + ' ' + d.id + ' ' + d.tags.join(' ')).toLowerCase()
+      .includes((options.filter || '').trim().toLowerCase())
+    function highlight(node) {
+      const connected = adjacency.get(node.id) || new Set()
+      nodeSelection.classed('dimmed', d => d.id !== node.id && !connected.has(d.id))
+      linkSelection.classed('dimmed', d => d.source.id !== node.id && d.target.id !== node.id)
+      updateInfo(node.title + ' · ' + connected.size + ' connections')
     }
-    window.filterPlaybookGraph = applyFilter
-    function showRelations(node) {
-      const adj = neighbors.get(node.id)
-      nodeSel.classed('dimmed', d => !adj.has(d.id))
-      edgeSel.classed('dimmed', l => l.source.id !== node.id && l.target.id !== node.id)
-      nodeSel.classed('focused', d => d.id === node.id)
-      if (info) info.textContent = node.title + ' · 연결된 관점 ' + (adj.size - 1) + '개 · 클릭하여 열기'
+    function normal() {
+      const hasFilter = !!(options.filter || '').trim()
+      nodeSelection.classed('dimmed', d => hasFilter && !matches(d))
+      linkSelection.classed('dimmed', d => hasFilter && !matches(d.source) && !matches(d.target))
+      updateInfo(defaultInfo)
     }
-    function clearRelations() {
-      nodeSel.classed('dimmed', false).classed('focused', false)
-      edgeSel.classed('dimmed', false)
-      if (info) info.textContent = defaultInfo
-      if (activeFilter) applyFilter(activeFilter)
-    }
-    nodeSel.on('mouseenter', (_, d) => showRelations(d))
-      .on('mouseleave', clearRelations)
-      .on('focus', (_, d) => showRelations(d))
-      .on('blur', clearRelations)
-      .on('click', (event, d) => {
-        if (event.defaultPrevented) return
-        navigate(d.path)
-      })
-      .on('keydown', (event, d) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          navigate(d.path)
-        }
-      })
-    nodeSel.call(d3.drag()
+    normal()
+    let moved = false
+    const dragging = d3.drag()
       .on('start', event => {
-        event.sourceEvent.stopPropagation()
-        if (!event.active) simulation.alphaTarget(0.18).restart()
+        moved = false
+        event.sourceEvent?.stopPropagation()
+        if (!event.active) simulation.alphaTarget(.2).restart()
         event.subject.fx = event.subject.x
         event.subject.fy = event.subject.y
       })
       .on('drag', event => {
+        moved = true
         event.subject.fx = event.x
         event.subject.fy = event.y
       })
@@ -154,30 +144,55 @@
         if (!event.active) simulation.alphaTarget(0)
         event.subject.fx = null
         event.subject.fy = null
-      }))
-
-    function reset() {
-      svg.transition().duration(450).call(zoom.transform, d3.zoomIdentity)
-      simulation.alpha(0.6).restart()
+      })
+    nodeSelection.call(dragging)
+    const activate = node => {
+      if (mode === 'local' && selectedId === node.id) options.openDocument(node.path)
+      else options.selectNode(node.id)
     }
-    const resetButton = container.querySelector('[data-graph-reset]')
-    resetButton?.addEventListener('click', reset)
-    // Gracefully follow the user's reduced-motion preference.
+    nodeSelection
+      .on('mouseenter', (_, node) => highlight(node))
+      .on('mouseleave', normal)
+      .on('focus', (_, node) => highlight(node))
+      .on('blur', normal)
+      .on('click', (event, node) => {
+        if (event.defaultPrevented || moved) return
+        activate(node)
+      })
+      .on('dblclick', (event, node) => {
+        event.stopPropagation()
+        event.preventDefault()
+        options.openDocument(node.path)
+      })
+      .on('keydown', (event, node) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          activate(node)
+        }
+      })
+    const resetButton = panel.querySelector('[data-graph-reset]')
+    const zoomInButton = panel.querySelector('[data-zoom-in]')
+    const zoomOutButton = panel.querySelector('[data-zoom-out]')
+    const onReset = () => svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity)
+    const onZoomIn = () => svg.transition().duration(180).call(zoom.scaleBy, 1.3)
+    const onZoomOut = () => svg.transition().duration(180).call(zoom.scaleBy, 1 / 1.3)
+    resetButton?.addEventListener('click', onReset)
+    zoomInButton?.addEventListener('click', onZoomIn)
+    zoomOutButton?.addEventListener('click', onZoomOut)
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       simulation.stop()
-      for (let i = 0; i < 250; i++) simulation.tick()
-      edgeSel.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+      for (let i = 0; i < 240; i++) simulation.tick()
+      linkSelection.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x).attr('y2', d => d.target.y)
-      nodeSel.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
+      nodeSelection.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
     }
-    dispose = () => {
+    release = () => {
       simulation.stop()
-      resetButton?.removeEventListener('click', reset)
-      svg.on('.zoom', null)
-      nodeSel.on('mouseenter', null).on('mouseleave', null).on('click', null).on('keydown', null)
-      svg.remove()
-      window.filterPlaybookGraph = () => {}
-      dispose = () => {}
+      resetButton?.removeEventListener('click', onReset)
+      zoomInButton?.removeEventListener('click', onZoomIn)
+      zoomOutButton?.removeEventListener('click', onZoomOut)
+      svg.on('.zoom', null).remove()
+      release = () => {}
     }
   }
 })()
