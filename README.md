@@ -4,7 +4,8 @@ SSD 분석용 Markdown Playbook을 GitHub Pages의 **main /docs**에서 직접 �
 
 ## 구조
 
-- `docs/index.html`, `docs/app.js`, `docs/styles.css`: 정적 브라우저 뷰어
+- `docs/index.html`, `docs/app.js`, `docs/styles.css`: 문서 트리 + Playbook 관계 그래프 뷰어
+- `docs/manifest.json`: 사이드바에서 보여줄 Markdown 파일 경로 목록 (하위 폴더 자동 표시)
 - `docs/playbooks/*.md`: 공통 분석 관점 및 Frontmatter
 - `docs/products/**/*.md`: 제품별 기준 (가상 값)
 
@@ -43,3 +44,13 @@ Private Repository의 Pages 게시 가능 여부는 GitHub 요금제와 설정�
 Quartz를 공개 Pages의 실제 렌더러로 사용하려면 GitHub 저장소 **Settings → Pages → Source: GitHub Actions**로 바꿔 주세요. 그러면 `docs/`의 문서들을 Quartz가 빌드해 게시합니다. `/docs` 직접 게시는 이전 프로토타입 비교용으로 유지할 수 있지만, Pages 배포 소스는 하나만 선택할 수 있습니다.
 
 **npm은 Quartz 빌드 환경에서만 사용합니다.** 문서를 읽거나 편집하는 사람은 설치할 필요가 없습니다.
+
+
+## 현재 화면 구조
+
+- **왼쪽**: Playbooks / Products 폴더 트리. 디렉터리가 깊어지면 하위 계층으로 표시됩니다.
+- **Playbooks 클릭**: Playbook 간 Frontmatter `links` 관계를 그래프로 표시합니다. 노드를 누르면 문서를 엽니다.
+- **개별 문서 클릭**: Markdown 본문을 렌더링하고, Frontmatter의 `title`, `description`, `tags`, `aliases`를 상단에 정리합니다. 원본 YAML은 표시하지 않습니다.
+- **새 문서 추가**: Markdown 파일을 만들고 `docs/manifest.json`의 적절한 목록에 경로를 한 줄 추가합니다.
+
+이 정적 뷰어의 그래프는 Quartz 내장 그래프가 아니라, 데모용 SVG 그래프입니다. 별도의 Quartz 예제는 `quartz-example/`에 남겨두었습니다.
