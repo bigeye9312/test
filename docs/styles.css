@@ -93,3 +93,40 @@ details.callout>summary.callout-title{cursor:pointer;list-style:revert;padding:0
 .graph-page-title{width:calc(100% - 88px);max-width:762px;align-self:center;flex:none;font-size:34px;font-weight:680;letter-spacing:-.6px;color:#e7e7e7;margin:0 0 28px}
 @media(max-width:750px){.graph-page-title{width:calc(100% - 50px);font-size:28px}}
 @media(max-width:570px){.graph-page-title{width:calc(100% - 36px);margin-bottom:18px}}
+
+/* Confluence-inspired page labels: lightweight metadata at the lower-right. */
+.page-tags{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:44px;
+  padding-top:16px;
+  border-top:1px solid #343434;
+  color:#898989;
+  font-size:11px;
+}
+.page-tags-label{color:#8e8e8e;font-weight:500}
+.page-tags-list{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px}
+.page-tags .tag-pill{
+  border:1px solid #45404c;
+  border-radius:4px;
+  padding:4px 8px;
+  background:#2b2931;
+  color:#b6a7cb;
+  font-size:11px;
+  line-height:1.25;
+}
+.page-tags .tag-pill:hover{background:#383242;border-color:#60506e}
+.graph-workspace>.page-tags{
+  flex:none;
+  align-self:center;
+  width:calc(100% - 88px);
+  max-width:762px;
+  margin:0;
+  padding:10px 0 14px;
+  border:0;
+}
+@media(max-width:750px){.graph-workspace>.page-tags{width:calc(100% - 50px)}}
+@media(max-width:570px){.graph-workspace>.page-tags{width:calc(100% - 36px)}}
