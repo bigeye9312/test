@@ -3,14 +3,15 @@
  * Requires D3 v7 loaded before app.js. */
 (() => {
   const palette = {
-    discovery: '#69b7ff',
-    runtime: '#b299ff',
-    error: '#ff8795',
-    performance: '#f5bf6a',
-    internal: '#55d9b5',
-    default: '#a9b8d0',
+    discovery: '#8f9ec9',
+    runtime: '#bd9cce',
+    error: '#d19a9a',
+    performance: '#c9b17f',
+    internal: '#86bca8',
+    default: '#a7a7a7',
   }
   let dispose = () => {}
+  window.filterPlaybookGraph = () => {}
   const svgNS = 'http://www.w3.org/2000/svg'
 
   window.disposePlaybookGraph = () => dispose()
@@ -23,7 +24,7 @@
       return
     }
     const width = 960
-    const height = 590
+    const height = 600
     const nodes = paths.map(path => ({
       id: String(docs[path].meta.id || path),
       path,
@@ -83,10 +84,10 @@
     svg.call(zoom).on('dblclick.zoom', null)
 
     const simulation = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(links).id(d => d.id).distance(160).strength(0.45))
-      .force('charge', d3.forceManyBody().strength(-610))
+      .force('link', d3.forceLink(links).id(d => d.id).distance(135).strength(0.44))
+      .force('charge', d3.forceManyBody().strength(-480))
       .force('center', d3.forceCenter(width/2, height/2))
-      .force('collide', d3.forceCollide(75).iterations(2))
+      .force('collide', d3.forceCollide(58).iterations(2))
       .alphaDecay(0.027)
       .on('tick', () => {
         edgeSel
@@ -96,6 +97,21 @@
       })
 
     // ForceLink mutates source/target into objects after simulation initializes.
+    let activeFilter = ''
+    function applyFilter(query) {
+      activeFilter = (query || '').trim().toLowerCase()
+      if (!activeFilter) {
+        clearRelations()
+        return
+      }
+      const matching = new Set(nodes.filter(node =>
+        (node.title + ' ' + node.id + ' ' + (node.tags || []).join(' ')).toLowerCase().includes(activeFilter)
+      ).map(node => node.id))
+      nodeSel.classed('dimmed', d => !matching.has(d.id)).classed('focused', d => matching.has(d.id))
+      edgeSel.classed('dimmed', link => !matching.has(link.source.id) && !matching.has(link.target.id))
+      if (info) info.textContent = matching.size + '개 노드가 검색어와 일치합니다'
+    }
+    window.filterPlaybookGraph = applyFilter
     function showRelations(node) {
       const adj = neighbors.get(node.id)
       nodeSel.classed('dimmed', d => !adj.has(d.id))
@@ -107,6 +123,7 @@
       nodeSel.classed('dimmed', false).classed('focused', false)
       edgeSel.classed('dimmed', false)
       if (info) info.textContent = defaultInfo
+      if (activeFilter) applyFilter(activeFilter)
     }
     nodeSel.on('mouseenter', (_, d) => showRelations(d))
       .on('mouseleave', clearRelations)
@@ -159,6 +176,7 @@
       svg.on('.zoom', null)
       nodeSel.on('mouseenter', null).on('mouseleave', null).on('click', null).on('keydown', null)
       svg.remove()
+      window.filterPlaybookGraph = () => {}
       dispose = () => {}
     }
   }
