@@ -327,3 +327,16 @@ body{background:#fff;color:#27313c}
   .graph-quick-search{top:43px;right:6px;max-width:calc(100% - 12px)}
 }
 
+
+/* Markdown tables: GitHub-inspired header and subtle zebra rows. */
+.markdown th{
+  background:#f5f6f9;
+  font-weight:650;
+}
+.markdown tbody tr:nth-child(even){background:#f6f8fa}
+.markdown tbody tr:nth-child(odd){background:#fff}
+.markdown th,
+.markdown td{
+  border:1px solid #dfe4ea;
+  padding:9px 13px;
+}
