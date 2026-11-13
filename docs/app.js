@@ -77,7 +77,7 @@ function sidebarHtml(){
   const content=expanded.has(key)?treeHtml(tree(section.paths,key+'/'),key+'/'):''
   return '<div class="tree-section"><div class="section-row"><button data-section="'+key+'" class="section-link'+(selected===key?' selected':'')+'">'+esc(sidebarFolderLabel(key))+'</button><button class="section-toggle" data-top="'+key+'" aria-label="Toggle '+section.label+'">'+(expanded.has(key)?'⌄':'›')+'</button></div>'+content+'</div>'
  }).join('')
- return '<aside class="sidebar" id="wiki-sidebar">'+sidebarToggleHtml()+'<a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Magnifying glass">🔍</span> CIA</a>'+
+ return '<aside class="sidebar" id="wiki-sidebar">'+sidebarToggleHtml()+'<a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Government building">🏛️</span> CIA</a>'+
  '<div class="sidebar-search"><span class="search-icon" aria-hidden="true">⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
  '<nav class="file-tree">'+nav+'</nav></aside>'
 }
