@@ -15,3 +15,14 @@ details.callout>summary.callout-title{cursor:pointer;list-style:revert;padding:0
 .graph-canvas-controls button{height:28px;width:29px;border:1px solid #444;background:#292929;color:#aaa;border-radius:4px;font-size:17px;line-height:1}
 .graph-canvas-controls button:hover{background:#373737;color:#eee}
 .graph-node-count{margin-top:3px;min-width:60px;text-align:right;color:#888;font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* Navigation breadcrumbs replace the decorative top banner. */
+.breadcrumbs{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:26px;font-size:12px;color:#979797;margin:0 0 22px;line-height:1.5}
+.breadcrumbs a{color:#a7a7a7;border-radius:4px;padding:3px 5px;margin:-3px -5px;text-decoration:none;transition:background .12s,color .12s}
+.breadcrumbs a:hover{color:#e7dbf5;background:#37313f}
+.breadcrumbs [aria-current="page"]{color:#ddd;font-weight:520}
+.breadcrumb-divider{color:#626262}
+.graph-workspace>.breadcrumbs{flex:none;margin:0;padding:8px 20px;min-height:40px;background:#222;border-bottom:1px solid #363636}
+.graph-workspace>.breadcrumbs a{font-weight:550}
+.article-wrap>.breadcrumbs{margin-bottom:28px}
+@media(max-width:570px){.graph-workspace>.breadcrumbs{padding:7px 12px}.article-wrap>.breadcrumbs{margin-bottom:20px}}
