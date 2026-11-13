@@ -124,14 +124,13 @@ function graphHtml(){
   return '<div class="graph-workspace">'+breadcrumb('playbooks')+'<h1 class="graph-page-title">'+esc(label('playbooks'))+'</h1><section class="graph-shell" aria-label="Interactive Playbook Graph">'+
     '<div class="graph-head"><div class="graph-head-actions">'+
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
-    '<button class="graph-toolbar-button" data-graph-reset title="Reset view" aria-label="Reset view">⟲</button>'+
     '</div></div>'+
     '<div class="graph-canvas"></div>'+
     (graphMode==='local'?'<div class="graph-overlay"><div class="graph-context-tools"><button data-graph-back class="graph-back" type="button">‹ &nbsp; Global graph</button><span class="graph-center-label">'+esc(focusTitle)+'</span><label class="graph-control-label">Depth <select id="graph-depth"><option value="1"'+(graphDepth===1?' selected':'')+'>1</option><option value="2"'+(graphDepth===2?' selected':'')+'>2</option></select></label></div></div>':'')+
     '<aside class="graph-settings'+(graphSettingsOpen?' is-open':'')+'" aria-label="Settings">'+
     '<div class="settings-top"><strong>Settings</strong><button type="button" data-settings-close title="Close settings" aria-label="Close settings">×</button></div>'+
     filters+groups+display+forces+'</aside>'+
-    '<div class="graph-canvas-controls"><button data-zoom-in title="Zoom in" aria-label="Zoom in">+</button><button data-zoom-out title="Zoom out" aria-label="Zoom out">−</button><span class="graph-node-count" aria-live="polite">0 nodes</span></div>'+
+    '<div class="graph-canvas-controls"><button data-graph-reset title="Reset view" aria-label="Reset view">⟲</button><button data-zoom-in title="Zoom in" aria-label="Zoom in">+</button><button data-zoom-out title="Zoom out" aria-label="Zoom out">−</button><span class="graph-node-count" aria-live="polite">0 nodes</span></div>'+
     
     '</section>'+pageMetadata(documents[folders.playbooks])+'</div>'
 }
