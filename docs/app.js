@@ -9,12 +9,12 @@ const categories = {
   performance:{label:'Performance',color:'#c9b17f'},
   internal:{label:'Internal',color:'#86bca8'}
 }
-let documents={}, playbooks=[], products=[], folders={}
-let sidebarOrder=['playbooks','products']
+let documents={}, pages=[], playbooks=[], folders={}
+let sidebarOrder=[]
 
 const pathSlug = path => path.replace(/\.md$/, '')
 
-let selected='playbooks', expanded=new Set(['playbooks','products'])
+let selected='playbook', expanded=new Set(['playbook','device-info'])
 let search='', graphFilter=''
 let sidebarCollapsed=false
 let graphMode='global', graphFocus=null
@@ -22,7 +22,7 @@ let graphSettingsOpen=false
 const defaultGraphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:180, linkDistance:60, showLabels:true}
 let graphOptions={...defaultGraphOptions}
 
-const docUrl = path => path==='playbooks'||path==='products'?'?view='+path:folders[path]?'?folder='+encodeURIComponent(path):'?doc='+encodeURIComponent(path)
+const docUrl = path => folders[path]&&!path.includes('/')?'?view='+encodeURIComponent(path):folders[path]?'?folder='+encodeURIComponent(path):'?doc='+encodeURIComponent(path)
 function parse(raw){
   const match=raw.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n/)
   return match?{meta:yaml.load(match[1])||{},body:raw.slice(match[0].length)}:{meta:{},body:raw}
@@ -30,16 +30,23 @@ function parse(raw){
 async function load(){
   const r=await fetch('./manifest.json'); if(!r.ok)throw Error('manifest.json을 읽을 수 없습니다')
   const manifest=await r.json()
-  playbooks=manifest.playbooks; products=manifest.products; folders=manifest.folders||{}
-  if(Array.isArray(manifest.sidebarOrder))sidebarOrder=[...new Set([...manifest.sidebarOrder.filter(key=>key==='playbooks'||key==='products'),'playbooks','products'])]
-  await Promise.all([...new Set([...playbooks,...products,...Object.values(folders)])].map(async path=>{
+  pages=manifest.documents||[]; folders=manifest.folders||{}
+  playbooks=pages.filter(path=>path.startsWith('playbook/'))
+  const roots=Object.keys(folders).filter(path=>!path.includes('/'))
+  sidebarOrder=Array.isArray(manifest.sidebarOrder)?[...new Set([...manifest.sidebarOrder.filter(path=>roots.includes(path)),...roots])]:roots
+  await Promise.all([...new Set([...pages,...Object.values(folders)])].map(async path=>{
     const res=await fetch('./'+path);if(!res.ok)throw Error(path+'를 읽을 수 없습니다')
     documents[path]={...parse(await res.text()),path}
   }))
   const params=new URLSearchParams(location.search)
-  selected=documents[params.get('doc')]?params.get('doc'):(folders[params.get('folder')]?params.get('folder'):params.get('view')==='products'?'products':'playbooks')
+  selected=selectedFromParams(params)
   render()
   if(params.get('heading'))document.getElementById(window.noteMarkdown.slug(params.get('heading')))?.scrollIntoView({block:'start'})
+}
+function selectedFromParams(params){
+ const remap=value=>String(value||'').replace(/^playbooks(?=\/|$)/,'playbook').replace(/^products(?=\/|$)/,'device-info')
+ const doc=remap(params.get('doc')),folder=remap(params.get('folder')),view=remap(params.get('view'))
+ return documents[doc]?doc:folders[folder]?folder:folders[view]?view:'playbook'
 }
 function label(path){return documents[folders[path]||path]?.body.match(/^#\s+(.+)$/m)?.[1]?.trim()||path.split('/').pop().replace(/\.md$/,'')}
 const sidebarFolderLabel = path => label(path).replace(/[-_]+/g,' ').replace(/\b[a-z]/g,letter=>letter.toUpperCase())
@@ -68,16 +75,12 @@ function treeHtml(entries,prefix='',depth=0){
   }).join('')
 }
 function sidebarHtml(){
- const sections={
-  playbooks:{paths:playbooks,label:'Playbook'},
-  products:{paths:products,label:'Device Info'}
- }
  const nav=sidebarOrder.map(key=>{
-  const section=sections[key]
-  const content=(search||expanded.has(key))?treeHtml(tree(section.paths,key+'/'),key+'/'):''
-  return '<div class="tree-section"><div class="section-row"><button data-section="'+key+'" class="section-link'+(selected===key?' selected':'')+'">'+esc(sidebarFolderLabel(key))+'</button><button class="section-toggle" data-top="'+key+'" aria-label="Toggle '+section.label+'">'+((search||expanded.has(key))?'⌄':'›')+'</button></div>'+content+'</div>'
+  const sectionPaths=pages.filter(path=>path.startsWith(key+'/'))
+  const content=(search||expanded.has(key))?treeHtml(tree(sectionPaths,key+'/'),key+'/'):''
+  return '<div class="tree-section"><div class="section-row"><button data-section="'+esc(key)+'" class="section-link'+(selected===key?' selected':'')+'">'+esc(sidebarFolderLabel(key))+'</button><button class="section-toggle" data-top="'+esc(key)+'" aria-label="Toggle '+esc(sidebarFolderLabel(key))+'">'+((search||expanded.has(key))?'⌄':'›')+'</button></div>'+content+'</div>'
  }).join('')
- return '<aside class="sidebar" id="wiki-sidebar">'+sidebarToggleHtml()+'<a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Government building">🏛️</span> CIA</a>'+
+ return '<aside class="sidebar" id="wiki-sidebar">'+sidebarToggleHtml()+'<a class="brand" data-section="playbook" href="'+docUrl('playbook')+'"><span class="brand-mark" role="img" aria-label="Government building">🏛️</span> CIA</a>'+
  '<div class="sidebar-search"><span class="search-icon" aria-hidden="true">⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
  '<nav class="file-tree">'+nav+'</nav></aside>'
 }
@@ -131,7 +134,7 @@ function graphHtml(){
   const forces='<details><summary>Forces</summary><div class="settings-group">'+
     slider('repel',80,900,20,'Repel force')+slider('linkDistance',30,260,10,'Link distance')+
     '</div></details>'
-  return '<div class="graph-workspace">'+breadcrumb('playbooks')+'<h1 class="graph-page-title">'+esc(label('playbooks'))+'</h1><section class="graph-shell" aria-label="Interactive Playbook Graph">'+
+  return '<div class="graph-workspace">'+breadcrumb('playbook')+'<h1 class="graph-page-title">'+esc(label('playbook'))+'</h1><section class="graph-shell" aria-label="Interactive Playbook Graph">'+
     '<div class="graph-head"><div class="graph-head-actions">'+
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '</div></div>'+
@@ -142,7 +145,7 @@ function graphHtml(){
     filters+groups+display+forces+'</aside>'+
     '<div class="graph-canvas-controls"><button data-zoom-in title="Zoom in" aria-label="Zoom in">+</button><button data-zoom-out title="Zoom out" aria-label="Zoom out">−</button><button data-graph-reset title="Reset view" aria-label="Reset view">⟲</button><span class="graph-node-count" aria-live="polite">0 nodes</span></div>'+
     
-    '</section>'+pageMetadata(documents[folders.playbooks])+'</div>'
+    '</section>'+pageMetadata(documents[folders.playbook])+'</div>'
 }
 function breadcrumb(path){
  const parts=path.split('/')
@@ -151,7 +154,7 @@ function breadcrumb(path){
    const current=i===parts.length-1
    const file=current&&path.endsWith('.md')
    const valid=file?!!documents[target]:!!folders[target]
-   const display=i===0?(part==='playbooks'?'playbook':part==='products'?'device-info':part):part
+   const display=part
    if(!valid)return '<span>'+esc(display)+'</span>'
    return '<a '+(file?'data-doc':'data-section')+'="'+esc(target)+'" href="'+docUrl(target)+'"'+(current?' aria-current="page" class="breadcrumb-current"':'')+'>'+esc(display)+'</a>'
  }).join('<span class="breadcrumb-divider">/</span>')+'</nav>'
@@ -159,9 +162,9 @@ function breadcrumb(path){
 function folderHtml(folder){
  const doc=documents[folders[folder]]
  if(!doc)return ''
- if(folder==='playbooks')return graphHtml()
+ if(folder==='playbook')return graphHtml()
  const subfolders=Object.keys(folders).filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
- const files=[...playbooks,...products].filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
+ const files=pages.filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
  const children=[...subfolders.map(path=>({path,folder:true})),...files.map(path=>({path,folder:false}))]
  return '<div class="article-wrap">'+breadcrumb(folder)+'<h1 class="document-title">'+esc(label(folder))+'</h1>'+
  '<div class="markdown">'+markdownHtml(doc)+'</div>'+
@@ -176,7 +179,7 @@ function mainHtml(){
   return folders[selected]?folderHtml(selected):articleHtml(documents[selected])
 }
 function select(path,heading=''){
-  if(path==='playbooks'){graphMode='global';graphFocus=null}
+  if(path==='playbook'){graphMode='global';graphFocus=null}
   if(!folders[path]&&!documents[path])return
   selected=path
   history.pushState({},'',docUrl(path)+(heading?'&heading='+encodeURIComponent(heading):''))
@@ -190,7 +193,7 @@ function sidebarToggleHtml(){
 }
 function render(){
   window.disposePlaybookGraph?.()
-  root.innerHTML='<div class="shell'+(sidebarCollapsed?' sidebar-collapsed':'')+'">'+(sidebarCollapsed?sidebarToggleHtml():sidebarHtml())+'<main class="main"><div class="page-content'+(selected==='playbooks'?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
+  root.innerHTML='<div class="shell'+(sidebarCollapsed?' sidebar-collapsed':'')+'">'+(sidebarCollapsed?sidebarToggleHtml():sidebarHtml())+'<main class="main"><div class="page-content'+(selected==='playbook'?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
   $('[data-sidebar-visibility]')?.addEventListener('click',()=>{sidebarCollapsed=!sidebarCollapsed;render()})
   root.querySelectorAll('[data-doc]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.doc,node.dataset.heading||'')}))
   root.querySelectorAll('[data-section]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.section)}))
@@ -206,7 +209,7 @@ function render(){
     const input=$('#sidebar-search');input?.focus();input?.setSelectionRange(value.length,value.length)
   })
   root.querySelectorAll('[data-tag]').forEach(node=>node.addEventListener('click',()=>{search=node.dataset.tag;render();$('#sidebar-search')?.focus()}))
-  if(selected==='playbooks'){
+  if(selected==='playbook'){
     const navigateFocus=id=>{
       graphFocus=id
       graphMode='local'
@@ -248,7 +251,7 @@ function render(){
 }
 window.addEventListener('popstate',()=>{
   const p=new URLSearchParams(location.search)
-  selected=documents[p.get('doc')]?p.get('doc'):(folders[p.get('folder')]?p.get('folder'):p.get('view')==='products'?'products':'playbooks')
+  selected=selectedFromParams(p)
   render()
   const h=p.get('heading')
   if(h)document.getElementById(window.noteMarkdown.slug(h))?.scrollIntoView({block:'start'})
