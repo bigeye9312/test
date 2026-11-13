@@ -39,7 +39,7 @@ python -m http.server 8000 --directory docs
 
 브라우저에서 http://localhost:8000 접속.
 
-새 문서를 추가하면 `docs/manifest.json`에 경로도 추가해야 탐색기에 표시됩니다. 그래프는 `docs/playbooks/*.md` Frontmatter의 커스텀 `links` 관계를 사용합니다. `links`는 Obsidian 공식 Frontmatter 필드가 아닙니다.
+새 문서를 추가하면 `docs/manifest.json`에 경로도 추가해야 탐색기에 표시됩니다. 그래프는 `docs/playbooks/*.md` 본문의 Obsidian `[[WikiLink]]` 관계를 사용합니다. 그래프 연결은 Markdown 본문의 `[[WikiLink]]`로 표시하며, 그룹 색상은 기본 속성 `tags`의 `area/*` 태그로 정합니다.
 
 ## 참고 자료
 - Obsidian Graph View: https://obsidian.md/help/plugins/graph
@@ -58,7 +58,21 @@ Graph canvas occupies the editor, with a collapsible floating settings panel on 
 - **Groups**: colors assigned by the existing Playbook category.
 - **Display**: node labels, node size, and link thickness.
 - **Forces**: repel force and link distance.
-- **Navigation**: Global Graph is the landing view. Click a node to open Local Graph (1/2-hop), click the focused node again to open Markdown, or use Back to Global. Category colors are determined by the frontmatter `category` field, independent of `tags`.
+- **Navigation**: Global Graph is the landing view. Click a node to open Local Graph (1/2-hop), click the focused node again to open Markdown, or use Back to Global. Group colors are derived from native `tags` entries such as `area/discovery`.
 - **Navigation**: click a node once to enter its Local graph; click the same focused node again to open the document. Double-click opens a document immediately.
 
 Controls are intentionally limited to features supported by the current playbook data. Obsidian's attachment controls and query-driven groups are not included because there is no corresponding content model yet.
+
+## Obsidian-compatible frontmatter
+
+문서의 Frontmatter에는 Obsidian 기본 속성 `tags`, `aliases`, `cssclasses`만 사용합니다. 제목은 Markdown의 `# Heading`에서 읽습니다.
+
+```yaml
+---
+tags: [area/discovery, pcie, enumeration]
+---
+```
+
+연결 관계는 본문의 `[[playbooks/nvme-initialization|NVMe 초기화]]` 같은 WikiLink를 사용합니다. `area/discovery`도 Obsidian이 지원하는 중첩 태그 형식이며, 웹 그래프에서는 색상 그룹으로 사용합니다.
+
+기존 커스텀 `id`, `category`, `links` 필드는 제거했습니다. UI의 Properties도 `tags`, `aliases`, `cssclasses`만 표시합니다.
