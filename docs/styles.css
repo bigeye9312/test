@@ -130,3 +130,26 @@ details.callout>summary.callout-title{cursor:pointer;list-style:revert;padding:0
 }
 @media(max-width:750px){.graph-workspace>.page-tags{width:calc(100% - 50px)}}
 @media(max-width:570px){.graph-workspace>.page-tags{width:calc(100% - 36px)}}
+
+/* Compact Confluence-like page metadata: backlinks above hashtag tags. */
+.page-metadata{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:10px;
+  margin-top:38px;
+  padding-top:15px;
+  border-top:1px solid #343434;
+  font-size:11px;
+}
+.metadata-row{display:flex;align-items:flex-start;justify-content:flex-end;gap:10px;max-width:100%;line-height:1.7}
+.metadata-icon{width:20px;flex:none;text-align:center;font-size:14px;line-height:1.45}
+.metadata-items{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:5px;min-width:0;text-align:right}
+.meta-backlink{color:#bcadd5;text-decoration:none;border-radius:3px}
+.meta-backlink:hover{color:#e2d6f5;text-decoration:underline}
+.meta-separator{color:#656565;margin:0 2px}
+.meta-tag{background:none;border:0;padding:0 2px;color:#a99bc4;font-size:11px;line-height:1.7}
+.meta-tag:hover{color:#dfc8ff;text-decoration:underline}
+.graph-workspace>.page-metadata{flex:none;align-self:center;width:calc(100% - 88px);max-width:762px;margin:0;padding:10px 0 14px;border:0}
+@media(max-width:750px){.graph-workspace>.page-metadata{width:calc(100% - 50px)}}
+@media(max-width:570px){.graph-workspace>.page-metadata{width:calc(100% - 36px)}}
