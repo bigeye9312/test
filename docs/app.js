@@ -90,6 +90,7 @@ function sidebarHtml(){
 }
 function resolveLink(href,docPath){
   if(!href)return null
+  if(documents[href])return href
   if(/^(https?:|mailto:|#)/i.test(href))return null
   const segments=docPath.split('/').slice(0,-1)
   for(const part of href.split('/')){
@@ -137,8 +138,8 @@ function graphHtml(){
     '<label class="settings-search"><span>⌕</span><input id="graph-search" type="search" placeholder="Search files..." value="'+esc(graphFilter)+'" aria-label="Search files"></label>'+
     '<label class="settings-toggle"><span>Orphans</span><input type="checkbox" data-graph-option="orphans"'+checked('orphans')+'><i></i></label>'+
     '</div></details>'
-  const groups='<details open><summary>Groups</summary><div class="settings-group"><div class="settings-caption">Color by category</div>'+
-    Object.entries(categories).map(([key,val])=>'<div class="settings-group-row"><span>'+esc(val.label)+'</span><i class="settings-color" style="background:'+val.color+'"></i></div>').join('')+
+  const groups='<details open><summary>Groups</summary><div class="settings-group"><div class="settings-caption">Color by tags</div>'+
+    Object.entries(categories).map(([key,val])=>'<div class="settings-group-row"><span>#area/'+esc(key)+'</span><i class="settings-color" style="background:'+val.color+'"></i></div>').join('')+
     '</div></details>'
   const display='<details><summary>Display</summary><div class="settings-group">'+
     '<label class="settings-toggle"><span>Text labels</span><input type="checkbox" data-graph-option="showLabels"'+checked('showLabels')+'><i></i></label>'+
