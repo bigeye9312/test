@@ -11,6 +11,10 @@ AER와 Link 관련 증거를 수집하고 상관성을 점검합니다.
 - Link Width / Generation Speed 변화
 
 ## 주의
+
+> [!WARNING] Evidence limitation
+> AER 기록이 없다는 사실만으로 PCIe 오류가 없었다고 판단해서는 안 됩니다.
+
 AER가 없다고 PCIe 문제가 없었다고 확정할 수 없다.
 
 ## Related Playbooks
