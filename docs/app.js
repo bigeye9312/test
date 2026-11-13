@@ -59,40 +59,6 @@ function select(next) {
   render()
   window.scrollTo({top:0,behavior:'smooth'})
 }
-function svgGraph() {
-  const byId = Object.fromEntries(playbooks.map(path=>[docs[path].meta.id,path]))
-  const columns = [
-    ['pcie-enumeration','pcie-error'],
-    ['nvme-initialization','command-processing'],
-    ['fw-state','performance','gc-state']
-  ]
-  const positions = {}
-  const widths = [175,175,175]
-  columns.forEach((col,colIndex)=>col.forEach((id,rowIndex)=>{
-    const yy = col.length===2 ? [140,340][rowIndex] : [70,260,450][rowIndex]
-    positions[id]={x:50+colIndex*255,y:yy}
-  }))
-  const edges = playbooks.flatMap(path => (docs[path].meta.links || []).filter(l => byId[l.to]).map(l => ({from:docs[path].meta.id,to:l.to,type:l.type})))
-  const lines = edges.map(({from,to,type})=>{
-    const a=positions[from],b=positions[to]
-    if(!a||!b)return ''
-    const forward=b.x>=a.x
-    const sx=a.x+(forward?widths[0]:0), ex=b.x+(forward?0:widths[0])
-    const sy=a.y+28, ey=b.y+28
-    const cx=(sx+ex)/2
-    const color = type==='check_when'?'#5f8bb4':'#b3bdca'
-    const d='M'+sx+' '+sy+' C'+cx+' '+sy+','+cx+' '+ey+','+ex+' '+ey
-    return '<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="1.5" '+(type==='related'?'stroke-dasharray="5 5"':'')+' opacity=".8" />'
-  }).join('')
-  const shapes = playbooks.map(path=>{
-    const id=docs[path].meta.id, pos=positions[id]
-    if(!pos)return ''
-    const title=esc(label(path))
-    const name=esc(categoryNames[docs[path].meta.category]||'Playbook')
-    return '<g class="graph-node" data-doc="'+esc(path)+'" role="button" tabindex="0" aria-label="'+title+' 문서 열기"><rect x="'+pos.x+'" y="'+pos.y+'" width="175" height="57" rx="9"/><text x="'+(pos.x+12)+'" y="'+(pos.y+23)+'" class="graph-title">'+title+'</text><text x="'+(pos.x+12)+'" y="'+(pos.y+42)+'" class="graph-subtitle">'+name+'</text></g>'
-  }).join('')
-  return '<div class="graph-scroll"><svg viewBox="0 0 760 545" aria-label="Playbook 관계 그래프" role="img"><g>'+lines+'</g><g>'+shapes+'</g></svg></div>'
-}
 function contentHtml(doc) {
   const meta = doc.meta
   const tags = Array.isArray(meta.tags) ? meta.tags : []
@@ -124,11 +90,12 @@ function contentHtml(doc) {
     (connections?'<section class="connections"><h2>함께 볼 Playbook</h2><ul>'+connections+'</ul></section>':'')
 }
 function mainHtml(){
-  if(selection==='playbooks')return '<div class="bread">DOCS / PLAYBOOKS</div><h1 class="page-title">Playbooks</h1><p class="description">분석 관점 사이의 연결을 탐색하세요. 노드를 선택하면 문서가 열립니다.</p><div class="graph-legend"><span><i class="line-solid"></i> 조건부 검토</span><span><i class="line-dashed"></i> 관련 문서</span></div><section class="graph-panel">'+svgGraph()+'</section><p class="hint">그래프는 Markdown Frontmatter의 <code>links</code> 관계를 표시합니다. 분석의 필수 순서를 의미하지는 않습니다.</p>'
+  if(selection==='playbooks')return '<div class="bread">DOCS / PLAYBOOKS</div><h1 class="page-title">Playbooks</h1><p class="description">분석 관점 사이의 연결을 자유롭게 탐색하세요. 그래프 노드를 클릭하면 문서가 열립니다.</p><section class="graph-panel"><div class="graph-toolbar"><span class="graph-toolbar-title"><span class="pulse-dot"></span> Knowledge Map</span><div class="graph-toolbar-tools"><span>휠: 확대/축소 · 드래그: 이동</span><button type="button" data-graph-reset>화면 초기화 ⟳</button></div></div><div class="graph-canvas"></div><div class="graph-footer"><span class="graph-info">노드를 가리키면 연결된 분석 관점이 강조됩니다.</span><span class="graph-count">'+playbooks.length+' nodes</span></div></section><div class="graph-legend"><span><i class="category-dot discovery"></i> 인식·초기화</span><span><i class="category-dot runtime"></i> 명령</span><span><i class="category-dot error"></i> 오류</span><span><i class="category-dot performance"></i> 성능</span><span><i class="category-dot internal"></i> 펌웨어</span></div><p class="hint">그래프 연결은 Frontmatter <code>links</code>를 기반으로 하며, 분석의 필수 실행 순서를 의미하지 않습니다.</p>'
   if(selection==='products') return '<div class="bread">DOCS / PRODUCTS</div><h1 class="page-title">Products</h1><p class="description">제품별 판단 기준과 차이를 문서로 관리합니다.</p><div class="product-cards">'+products.map(path=>'<a href="'+docUrl(path)+'" data-doc="'+esc(path)+'"><strong>'+esc(label(path))+'</strong><span>'+esc(path.replace(/^products\//,'').replace(/\/[^/]+$/,''))+'</span></a>').join('')+'</div>'
   return contentHtml(docs[selection])
 }
 function render() {
+  window.disposePlaybookGraph?.()
   root.innerHTML='<div class="shell"><aside class="sidebar"><a class="brand" href="'+location.pathname+'" data-doc="playbooks"><span class="brand-mark">◈</span> SSD Playbooks</a><div class="sidebar-caption">DOCUMENTATION</div>'+
   '<div class="section-header"><button data-section="playbooks" class="section-name'+(selection==='playbooks'?' selected':'')+'">Playbooks</button><button class="folder-toggle" data-top="playbooks" aria-label="Playbooks 펼치기">'+(expanded.has('playbooks')?'−':'+')+'</button></div>'+
   (expanded.has('playbooks')?'<nav class="tree">'+treeHtml(tree(playbooks,'playbooks/'))+'</nav>':'')+
@@ -145,6 +112,10 @@ function render() {
     if(expanded.has(node.dataset.top))expanded.delete(node.dataset.top);else expanded.add(node.dataset.top)
     render()
   }))
+  if (selection === 'playbooks') {
+    const canvas = root.querySelector('.graph-canvas')
+    window.mountPlaybookGraph?.(canvas.parentElement, playbooks, docs, select)
+  }
   root.querySelectorAll('[data-folder]').forEach(node=>node.addEventListener('click',()=>{
     if(expanded.has(node.dataset.folder))expanded.delete(node.dataset.folder);else expanded.add(node.dataset.folder)
     render()
