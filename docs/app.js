@@ -146,10 +146,6 @@ function render(){
   }))
   $('#sidebar-search')?.addEventListener('input',e=>{
     const value=e.target.value;search=value
-    const tree=$('.file-tree');if(!tree)return
-    const wrapper=document.createElement('div')
-    wrapper.innerHTML='<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link">◇ Playbooks</button></div>'+treeHtml(treeMapPlaybooks())+'</div><div class="tree-section"><div class="section-row"><button data-section="products" class="section-link">▤ Products</button></div>'+treeHtml(tree(products,'products/'))+'</div></nav>'
-    // A full render restores all navigation bindings without separate search state.
     render()
     const input=$('#sidebar-search');input?.focus();input?.setSelectionRange(value.length,value.length)
   })
@@ -161,7 +157,6 @@ function render(){
     window.filterPlaybookGraph?.(graphFilter)
   }
 }
-function treeMapPlaybooks(){return tree(playbooks,'playbooks/')}
 window.addEventListener('popstate',()=>{
   const p=new URLSearchParams(location.search)
   selected=documents[p.get('doc')]?p.get('doc'):(p.get('view')==='products'?'products':'playbooks')
