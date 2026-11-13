@@ -98,21 +98,42 @@
       .attr('dy', 30).text(d => d.title)
       .style('display', options.showLabels === false ? 'none' : null)
 
-    const zoom = d3.zoom().scaleExtent([.45, 3])
+    const zoom = d3.zoom().scaleExtent([.08, 4])
       .filter(e => e.type !== 'dblclick' && !e.button)
       .on('zoom', event => viewport.attr('transform', event.transform))
     svg.call(zoom).on('dblclick.zoom', null)
     const simulation = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(edges).id(d => d.id).distance(Number(options.linkDistance) || (mode === 'local' ? 150 : 135)).strength(.5))
-      .force('charge', d3.forceManyBody().strength(-(Number(options.repel) || 410)))
+      .force('link', d3.forceLink(edges).id(d => d.id).distance(Number(options.linkDistance) || 60).strength(.5))
+      .force('charge', d3.forceManyBody().strength(-(Number(options.repel) || 180)))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide(67))
+      .force('collision', d3.forceCollide(d => (Number(options.nodeSize) || 7) + 9))
       .alphaDecay(.036)
       .on('tick', () => {
         linkSelection.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
           .attr('x2', d => d.target.x).attr('y2', d => d.target.y)
         nodeSelection.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
       })
+    // Lay out the complete graph before fitting the viewport, so Reset View
+    // returns to a stable overview instead of a zoom level that clips nodes.
+    simulation.stop()
+    for (let i = 0; i < 240; i++) simulation.tick()
+    linkSelection.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x).attr('y2', d => d.target.y)
+    nodeSelection.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
+
+    function fitAllNodes() {
+      if (!nodes.length) return
+      const xMin = d3.min(nodes, d => d.x), xMax = d3.max(nodes, d => d.x)
+      const yMin = d3.min(nodes, d => d.y), yMax = d3.max(nodes, d => d.y)
+      const padding = 85
+      const scale = Math.min(1.8, (width - 2 * padding) / Math.max(1, xMax - xMin),
+        (height - 2 * padding) / Math.max(1, yMax - yMin))
+      const cx = (xMin + xMax) / 2, cy = (yMin + yMax) / 2
+      svg.call(zoom.transform, d3.zoomIdentity
+        .translate(width / 2 - cx * scale, height / 2 - cy * scale)
+        .scale(scale))
+    }
+    fitAllNodes()
     const matches = d => (d.title + ' ' + d.id + ' ' + d.tags.join(' ')).toLowerCase()
       .includes((options.filter || '').trim().toLowerCase())
     function highlight(node) {
@@ -179,13 +200,6 @@
     resetButton?.addEventListener('click', onReset)
     zoomInButton?.addEventListener('click', onZoomIn)
     zoomOutButton?.addEventListener('click', onZoomOut)
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      simulation.stop()
-      for (let i = 0; i < 240; i++) simulation.tick()
-      linkSelection.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x).attr('y2', d => d.target.y)
-      nodeSelection.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
-    }
     release = () => {
       simulation.stop()
       resetButton?.removeEventListener('click', onReset)
