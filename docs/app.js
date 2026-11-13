@@ -64,10 +64,10 @@ function treeHtml(entries,prefix='',depth=0){
 }
 function sidebarHtml(){
  const p=treeHtml(tree(playbooks,'playbooks/'),'playbooks/'),q=treeHtml(tree(products,'products/'),'products/')
- return '<aside class="sidebar"><a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Magnifying glass">🔍</span> CIA Wiki</a>'+
+ return '<aside class="sidebar"><a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Magnifying glass">🔍</span> CIA: Customer Issue Analysis</a>'+
  '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
- '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">Playbook</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbook">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
- '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">Device Info</button><button class="section-toggle" data-top="products" aria-label="Toggle Device Info">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
+ '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">playbook</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbook">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
+ '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">device-info</button><button class="section-toggle" data-top="products" aria-label="Toggle Device Info">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
 }
 function resolveLink(href,docPath){
   if(!href)return null
