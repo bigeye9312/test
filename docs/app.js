@@ -66,7 +66,7 @@ function treeHtml(entries,prefix='',depth=0){
 }
 function sidebarHtml(){
  const p=treeHtml(tree(playbooks,'playbooks/'),'playbooks/'),q=treeHtml(tree(products,'products/'),'products/')
- return '<aside class="sidebar" id="wiki-sidebar"><a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Magnifying glass">🔍</span> CIA</a>'+
+ return '<aside class="sidebar" id="wiki-sidebar">'+sidebarToggleHtml()+'<a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Magnifying glass">🔍</span> CIA</a>'+
  '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
  '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">'+esc(sidebarFolderLabel('playbooks'))+'</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbook">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
  '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">'+esc(sidebarFolderLabel('products'))+'</button><button class="section-toggle" data-top="products" aria-label="Toggle Device Info">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
@@ -176,10 +176,12 @@ function select(path,heading=''){
   if(target)target.scrollIntoView({block:'start'})
   else $('.page-content')?.scrollTo({top:0})
 }
+function sidebarToggleHtml(){
+  return '<button type="button" class="sidebar-visibility-toggle" data-sidebar-visibility aria-controls="wiki-sidebar" aria-expanded="'+(!sidebarCollapsed)+'" aria-label="'+(sidebarCollapsed?'Expand sidebar':'Collapse sidebar')+'" title="'+(sidebarCollapsed?'Expand sidebar':'Collapse sidebar')+'"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>'+(sidebarCollapsed?'<path d="m13 9 3 3-3 3"/>':'<path d="m16 9-3 3 3 3"/>')+'</svg></button>'
+}
 function render(){
   window.disposePlaybookGraph?.()
-  const sidebarToggle='<button type="button" class="sidebar-visibility-toggle" data-sidebar-visibility aria-controls="wiki-sidebar" aria-expanded="'+(!sidebarCollapsed)+'" aria-label="'+(sidebarCollapsed?'Expand sidebar':'Collapse sidebar')+'" title="'+(sidebarCollapsed?'Expand sidebar':'Collapse sidebar')+'"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>'+(sidebarCollapsed?'<path d="m13 9 3 3-3 3"/>':'<path d="m16 9-3 3 3 3"/>')+'</svg></button>'
-  root.innerHTML='<div class="shell'+(sidebarCollapsed?' sidebar-collapsed':'')+'">'+sidebarHtml()+'<main class="main">'+sidebarToggle+'<div class="page-content'+(selected==='playbooks'?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
+  root.innerHTML='<div class="shell'+(sidebarCollapsed?' sidebar-collapsed':'')+'">'+(sidebarCollapsed?sidebarToggleHtml():sidebarHtml())+'<main class="main"><div class="page-content'+(selected==='playbooks'?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
   $('[data-sidebar-visibility]')?.addEventListener('click',()=>{sidebarCollapsed=!sidebarCollapsed;render()})
   root.querySelectorAll('[data-doc]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.doc,node.dataset.heading||'')}))
   root.querySelectorAll('[data-section]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.section)}))
