@@ -153,3 +153,31 @@ details.callout>summary.callout-title{cursor:pointer;list-style:revert;padding:0
 .graph-workspace>.page-metadata{flex:none;align-self:center;width:calc(100% - 88px);max-width:762px;margin:0;padding:10px 0 14px;border:0}
 @media(max-width:750px){.graph-workspace>.page-metadata{width:calc(100% - 50px)}}
 @media(max-width:570px){.graph-workspace>.page-metadata{width:calc(100% - 36px)}}
+
+/* Detective mark stays colorful; page metadata icons use monochrome currentColor. */
+.brand-mark{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:27px;
+  height:27px;
+  font-size:23px;
+  line-height:1;
+  flex:none;
+  color:inherit;
+}
+.metadata-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:20px;
+  height:20px;
+  flex:none;
+  color:#919191;
+}
+.metadata-icon svg{
+  width:15px;
+  height:15px;
+  display:block;
+  stroke:currentColor;
+}
