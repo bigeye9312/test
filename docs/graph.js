@@ -1,5 +1,4 @@
-/* D3 force-directed graph for the Markdown knowledge base.
- * Graph nodes and links are derived only from docs/playbooks frontmatter. */
+
 (() => {
   const palette = {
     discovery: '#8f9ec9',
@@ -28,7 +27,6 @@
       tags: documents[path].meta.tags || []
     }))
     const byId = new Map(allNodes.map(node => [node.id, node]))
-    // Obsidian-compatible connections come from WikiLinks in Markdown bodies.
     const allEdges = paths.flatMap(path => {
       const source=path.replace(/\.md$/,'')
       const matches=[...documents[path].body.matchAll(/\[\[([^\]\n]+)\]\]/g)]
@@ -64,7 +62,6 @@
     } else if (mode === 'category' && options.category) {
       const primary = allNodes.filter(node => node.category === options.category).map(node => node.id)
       visible = new Set(primary)
-      // Show first-hop cross-category context without hiding the relationship.
       for (const id of primary) {
         for (const neighbor of adjacency.get(id) || []) visible.add(neighbor)
       }
@@ -116,26 +113,17 @@
           .attr('x2', d => d.target.x).attr('y2', d => d.target.y)
         nodeSelection.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
       })
-    // d3.forceLink converts edge source and target strings to node objects.
-    const info = panel.querySelector('.graph-info')
-    const updateInfo = text => { if (info) info.textContent = text }
-    const defaultInfo = mode === 'local' && focus
-      ? focus.title + ' · ' + nodes.length + ' nodes · Select focused node to open document'
-      : nodes.length + ' nodes · Select node to explore locally'
-    updateInfo(defaultInfo)
     const matches = d => (d.title + ' ' + d.id + ' ' + d.tags.join(' ')).toLowerCase()
       .includes((options.filter || '').trim().toLowerCase())
     function highlight(node) {
       const connected = adjacency.get(node.id) || new Set()
       nodeSelection.classed('dimmed', d => d.id !== node.id && !connected.has(d.id))
       linkSelection.classed('dimmed', d => d.source.id !== node.id && d.target.id !== node.id)
-      updateInfo(node.title + ' · ' + connected.size + ' connections')
     }
     function normal() {
       const hasFilter = !!(options.filter || '').trim()
       nodeSelection.classed('dimmed', d => hasFilter && !matches(d))
       linkSelection.classed('dimmed', d => hasFilter && !matches(d.source) && !matches(d.target))
-      updateInfo(defaultInfo)
     }
     normal()
     let moved = false
