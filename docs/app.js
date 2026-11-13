@@ -128,7 +128,7 @@ function graphHtml(){
   const forces='<details><summary>Forces</summary><div class="settings-group">'+
     slider('repel',120,900,20,'Repel force')+slider('linkDistance',70,260,10,'Link distance')+
     '</div></details>'
-  return '<div class="graph-workspace"><section class="graph-shell" aria-label="Interactive Playbook Graph">'+
+  return '<div class="graph-workspace">'+breadcrumb('playbooks')+'<section class="graph-shell" aria-label="Interactive Playbook Graph">'+
     '<div class="graph-head"><div class="graph-head-actions">'+
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '<button class="graph-toolbar-button" data-graph-reset title="Reset view" aria-label="Reset view">⟲</button>'+
@@ -142,8 +142,18 @@ function graphHtml(){
     
     '</section></div>'
 }
+function breadcrumb(path){
+  const parts=path.split('/')
+  const rootPath=parts[0]==='products'?'products':'playbooks'
+  const links=parts.map((part,i)=>{
+    if(i===0)return '<a data-section="'+rootPath+'" href="'+docUrl(rootPath)+'">'+esc(part)+'</a>'
+    if(i===parts.length-1)return '<span aria-current="page">'+esc(part)+'</span>'
+    return '<span>'+esc(part)+'</span>'
+  })
+  return '<nav class="breadcrumbs" aria-label="Breadcrumb">'+links.join('<span class="breadcrumb-divider">/</span>')+'</nav>'
+}
 function productOverview(){
-  return '<div class="article-wrap"><div class="eyebrow">DOCUMENTATION / PRODUCTS</div><h1 class="document-title">Products</h1><p class="doc-description">제품별 기준과 예외를 기록하는 문서입니다.</p><div class="product-list">'+products.map(path=>'<a data-doc="'+esc(path)+'" href="'+docUrl(path)+'"><span class="doc-icon">▧</span><span><strong>'+esc(label(path))+'</strong><small>'+esc(path)+'</small></span><span class="chevron">↗</span></a>').join('')+'</div></div>'
+  return '<div class="article-wrap">'+breadcrumb('products')+'<h1 class="document-title">Products</h1><p class="doc-description">제품별 기준과 예외를 기록하는 문서입니다.</p><div class="product-list">'+products.map(path=>'<a data-doc="'+esc(path)+'" href="'+docUrl(path)+'"><span class="doc-icon">▧</span><span><strong>'+esc(label(path))+'</strong><small>'+esc(path)+'</small></span><span class="chevron">↗</span></a>').join('')+'</div></div>'
 }
 function articleHtml(doc){
  const incoming=Object.values(documents).filter(source=>{
@@ -153,7 +163,7 @@ function articleHtml(doc){
    return wiki||standard
  })
  const links=incoming.map(source=>'<a class="backlink" data-doc="'+esc(source.path)+'" href="'+docUrl(source.path)+'"><span>↗</span><span><strong>'+esc(label(source.path))+'</strong><small>'+esc(source.path)+'</small></span></a>').join('')
- return '<div class="article-wrap"><div class="eyebrow">'+esc(doc.path)+'</div><h1 class="document-title">'+esc(label(doc.path))+'</h1>'+
+ return '<div class="article-wrap">'+breadcrumb(doc.path)+'<h1 class="document-title">'+esc(label(doc.path))+'</h1>'+
  propertyHtml(doc)+'<article class="markdown">'+markdownHtml(doc)+'</article>'+
  '<section class="references"><div class="references-heading">Backlinks <span>'+incoming.length+'</span></div>'+
  (links||'<p class="empty-backlinks">No backlinks</p>')+'</section></div>'
@@ -173,8 +183,7 @@ function select(path,heading=''){
 }
 function render(){
   window.disposePlaybookGraph?.()
-  root.innerHTML='<div class="shell">'+sidebarHtml()+'<main class="main"><div class="page-top"><span>'+esc(selected==='playbooks'?'Playbooks':selected==='products'?'Products':label(selected))+'</span><a href="https://github.com/bigeye9312/test" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div>'+
- '<div class="page-content'+(selected==='playbooks'?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
+  root.innerHTML='<div class="shell">'+sidebarHtml()+'<main class="main"><div class="page-content'+(selected==='playbooks'?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
   root.querySelectorAll('[data-doc]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.doc,node.dataset.heading||'')}))
   root.querySelectorAll('[data-section]').forEach(node=>node.addEventListener('click',()=>select(node.dataset.section)))
   root.querySelectorAll('[data-top]').forEach(node=>node.addEventListener('click',()=>{
