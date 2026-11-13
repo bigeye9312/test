@@ -1,12 +1,7 @@
-const {marked, DOMPurify, jsyaml: yaml} = window
+const {jsyaml: yaml} = window
 const $ = (sel, scope=document) => scope.querySelector(sel)
 const root = $('#app')
 const esc = (v='') => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
-const icons = {
-  files:'▤', graph:'◇', search:'⌕', folder:'▸', file:'▧', collapse:'‹',
-  settings:'⚙', back:'‹', forward:'›', reset:'⟲', external:'↗',
-  more:'···', tag:'#', info:'ⓘ'
-}
 const categories = {
   discovery:{label:'Discovery',color:'#8f9ec9'},
   runtime:{label:'Runtime',color:'#bd9cce'},
@@ -17,19 +12,6 @@ const categories = {
 let documents={}, playbooks=[], products=[], folders={}
 
 const pathSlug = path => path.replace(/\.md$/, '')
-function findWikiPath(raw,currentPath){
-  const name=String(raw).split('#')[0].trim().replace(/\.md$/,'')
-  if(!name)return null
-  const paths=Object.keys(documents)
-  const exact=paths.find(path=>pathSlug(path)===name)
-  if(exact)return exact
-  const dir=currentPath.split('/').slice(0,-1).join('/')
-  const relative=paths.find(path=>pathSlug(path)===dir+'/'+name)
-  if(relative)return relative
-  const candidates=paths.filter(path=>pathSlug(path).split('/').pop()===name)
-  return candidates.length===1?candidates[0]:null
-}
-const wikiTargets = body => [...body.matchAll(/\[\[([^\]]+)\]\]/g)].map(match=>match[1].split('|')[0])
 
 let selected='playbooks', expanded=new Set(['playbooks','products'])
 let search='', graphFilter=''
