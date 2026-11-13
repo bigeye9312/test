@@ -39,6 +39,7 @@ async function load(){
   if(params.get('heading'))document.getElementById(window.noteMarkdown.slug(params.get('heading')))?.scrollIntoView({block:'start'})
 }
 function label(path){return documents[folders[path]||path]?.body.match(/^#\s+(.+)$/m)?.[1]?.trim()||path.split('/').pop().replace(/\.md$/,'')}
+const sidebarFolderLabel = path => label(path).replace(/[-_]+/g,' ').replace(/\b[a-z]/g,letter=>letter.toUpperCase())
 function tree(paths,prefix){
   const map={}
   for(const path of paths){
@@ -60,15 +61,15 @@ function treeHtml(entries,prefix='',depth=0){
     const open=search||expanded.has(id)
     const content=treeHtml(value,id,depth+1)
     if(search&&!content)return ''
-    return '<div class="tree-group"><div class="tree-folder-row" style="--level:'+depth+'"><button type="button" class="tree-folder-expand" data-folder="'+esc(id)+'" aria-label="Expand or collapse '+esc(name)+'">'+(open?'⌄':'›')+'</button><a class="tree-folder-link'+(selected===folderId?' selected':'')+'" data-section="'+esc(folderId)+'" href="'+docUrl(folderId)+'">'+esc(label(folderId))+'</a></div>'+(open?'<div>'+content+'</div>':'')+'</div>'
+    return '<div class="tree-group"><div class="tree-folder-row" style="--level:'+depth+'"><button type="button" class="tree-folder-expand" data-folder="'+esc(id)+'" aria-label="Expand or collapse '+esc(name)+'">'+(open?'⌄':'›')+'</button><a class="tree-folder-link'+(selected===folderId?' selected':'')+'" data-section="'+esc(folderId)+'" href="'+docUrl(folderId)+'">'+esc(sidebarFolderLabel(folderId))+'</a></div>'+(open?'<div>'+content+'</div>':'')+'</div>'
   }).join('')
 }
 function sidebarHtml(){
  const p=treeHtml(tree(playbooks,'playbooks/'),'playbooks/'),q=treeHtml(tree(products,'products/'),'products/')
  return '<aside class="sidebar" id="wiki-sidebar"><a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Magnifying glass">🔍</span> CIA</a>'+
  '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
- '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">playbook</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbook">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
- '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">device-info</button><button class="section-toggle" data-top="products" aria-label="Toggle Device Info">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
+ '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">'+esc(sidebarFolderLabel('playbooks'))+'</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbook">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
+ '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">'+esc(sidebarFolderLabel('products'))+'</button><button class="section-toggle" data-top="products" aria-label="Toggle Device Info">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
 }
 function resolveLink(href,docPath){
   if(!href)return null
