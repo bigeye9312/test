@@ -256,3 +256,9 @@ body{background:#fff;color:#27313c}
   .sidebar>.sidebar-visibility-toggle{top:8px;right:10px}
   .shell.sidebar-collapsed>.sidebar-visibility-toggle{top:10px;left:12px}
 }
+
+.brand,.brand-mark{
+  caret-color:transparent;
+  user-select:none;
+  -webkit-user-select:none;
+}
