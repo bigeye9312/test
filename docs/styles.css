@@ -207,3 +207,23 @@ body{background:#fff;color:#27313c}
   background:#a0a7b3;
 }
 .tree-item.selected .tree-leaf-dot::before{background:#7077a5}
+
+
+:root{--content-width:762px}
+.article-wrap{max-width:calc(var(--content-width) + 88px)}
+.graph-workspace>.breadcrumbs,
+.graph-page-title,
+.graph-workspace>.page-metadata,
+.graph-workspace>.graph-shell{max-width:var(--content-width)}
+.graph-workspace>.graph-shell{
+  width:calc(100% - 88px);
+  align-self:center;
+  min-width:0;
+  flex:1 1 auto;
+}
+@media(max-width:750px){
+  .graph-workspace>.graph-shell{width:calc(100% - 50px)}
+}
+@media(max-width:570px){
+  .graph-workspace>.graph-shell{width:calc(100% - 36px)}
+}
