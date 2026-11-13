@@ -78,7 +78,7 @@ function sidebarHtml(){
   return '<div class="tree-section"><div class="section-row"><button data-section="'+key+'" class="section-link'+(selected===key?' selected':'')+'">'+esc(sidebarFolderLabel(key))+'</button><button class="section-toggle" data-top="'+key+'" aria-label="Toggle '+section.label+'">'+(expanded.has(key)?'⌄':'›')+'</button></div>'+content+'</div>'
  }).join('')
  return '<aside class="sidebar" id="wiki-sidebar">'+sidebarToggleHtml()+'<a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Magnifying glass">🔍</span> CIA</a>'+
- '<div class="sidebar-search"><span aria-hidden="true">🔍</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
+ '<div class="sidebar-search"><span class="search-icon" aria-hidden="true">⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
  '<nav class="file-tree">'+nav+'</nav></aside>'
 }
 
@@ -118,7 +118,7 @@ function graphHtml(){
   const checked=name=>graphOptions[name]?' checked':''
   const slider=(name,min,max,step,title)=>'<label class="settings-slider"><span>'+title+'</span><input type="range" data-graph-option="'+name+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+graphOptions[name]+'"></label>'
   const filters='<details open><summary>Filters</summary><div class="settings-group">'+
-    '<label class="settings-search"><span aria-hidden="true">🔍</span><input id="graph-search" type="search" placeholder="Search" value="'+esc(graphFilter)+'" aria-label="Search files"></label>'+
+    '<label class="settings-search"><span class="search-icon" aria-hidden="true">⌕</span><input id="graph-search" type="search" placeholder="Search" value="'+esc(graphFilter)+'" aria-label="Search files"></label>'+
     '<label class="settings-toggle"><span>Orphans</span><input type="checkbox" data-graph-option="orphans"'+checked('orphans')+'><i></i></label>'+
     '</div></details>'
   const groups='<details><summary>Groups</summary><div class="settings-group"><div class="settings-caption">Color by tags</div>'+
