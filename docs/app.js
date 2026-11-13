@@ -15,6 +15,22 @@ const categories = {
   internal:{label:'Internal',color:'#86bca8'}
 }
 let documents={}, playbooks=[], products=[]
+
+const pathSlug = path => path.replace(/\.md$/, '')
+function findWikiPath(raw,currentPath){
+  const name=String(raw).split('#')[0].trim().replace(/\.md$/,'')
+  if(!name)return null
+  const paths=Object.keys(documents)
+  const exact=paths.find(path=>pathSlug(path)===name)
+  if(exact)return exact
+  const dir=currentPath.split('/').slice(0,-1).join('/')
+  const relative=paths.find(path=>pathSlug(path)===dir+'/'+name)
+  if(relative)return relative
+  const candidates=paths.filter(path=>pathSlug(path).split('/').pop()===name)
+  return candidates.length===1?candidates[0]:null
+}
+const wikiTargets = body => [...body.matchAll(/\[\[([^\]]+)\]\]/g)].map(match=>match[1].split('|')[0])
+
 let selected='playbooks', expanded=new Set(['playbooks','products'])
 let search='', mode='files', showProperties=true, graphFilter=''
 let graphMode='global', graphFocus=null, graphDepth=1
@@ -38,7 +54,7 @@ async function load(){
   selected=documents[params.get('doc')]?params.get('doc'):(params.get('view')==='products'?'products':'playbooks')
   render()
 }
-function label(path){return documents[path]?.meta.title||path.split('/').pop().replace(/\.md$/,'')}
+function label(path){return documents[path]?.body.match(/^#\s+(.+)$/m)?.[1]?.trim()||path.split('/').pop().replace(/\.md$/,'')}
 function tree(paths,prefix){
   const map={}
   for(const path of paths){
@@ -84,6 +100,12 @@ function resolveLink(href,docPath){
   return documents[candidate]?candidate:null
 }
 function markdownHtml(doc){
+  const converted=doc.body.replace(/\[\[([^\]\n]+)\]\]/g, (_,value)=>{
+    const [ref,alias]=value.split('|')
+    const target=findWikiPath(ref,doc.path)
+    return target?'['+(alias||label(target))+']('+target+')':(alias||ref)
+  })
+
   const renderer=new marked.Renderer()
   renderer.link=({href,text})=>{
     if(!href||/^(javascript:|data:|vbscript:)/i.test(href||''))return esc(text)
@@ -91,22 +113,23 @@ function markdownHtml(doc){
     if(target)return '<a href="'+docUrl(target)+'" data-doc="'+esc(target)+'">'+text+'</a>'
     return '<a href="'+esc(href)+'"'+(/^https?:/.test(href)?' target="_blank" rel="noopener noreferrer"':'')+'>'+text+'</a>'
   }
-  return DOMPurify.sanitize(marked.parse(doc.body,{renderer}))
+  return DOMPurify.sanitize(marked.parse(converted,{renderer}))
 }
 function propertyHtml(doc){
-  const meta=doc.meta
-  const tags=Array.isArray(meta.tags)?meta.tags:[]
-  const aliases=Array.isArray(meta.aliases)?meta.aliases:[]
-  return '<div class="properties'+(showProperties?'':' collapsed')+'"><button type="button" class="properties-toggle" data-properties><span class="caret">'+(showProperties?'⌄':'›')+'</span> Properties <span class="prop-count">'+(2+(tags.length>0)+(aliases.length>0))+'</span></button>'+
+  const tags=Array.isArray(doc.meta.tags)?doc.meta.tags:[]
+  const aliases=Array.isArray(doc.meta.aliases)?doc.meta.aliases:[]
+  const cssclasses=Array.isArray(doc.meta.cssclasses)?doc.meta.cssclasses:[]
+  const count=Number(tags.length>0)+Number(aliases.length>0)+Number(cssclasses.length>0)
+  if(!count)return ''
+  return '<div class="properties'+(showProperties?'':' collapsed')+'"><button type="button" class="properties-toggle" data-properties><span class="caret">'+(showProperties?'⌄':'›')+'</span> Properties <span class="prop-count">'+count+'</span></button>'+
   (showProperties?'<div class="property-grid">'+
-  '<div class="prop-key"><span class="prop-symbol">▧</span> title</div><div class="prop-value">'+esc(meta.title||label(doc.path))+'</div>'+
-  '<div class="prop-key"><span class="prop-symbol">≡</span> category</div><div class="prop-value">'+esc(meta.category|| (doc.path.startsWith('products/')?'product':'—'))+'</div>'+
   (aliases.length?'<div class="prop-key"><span class="prop-symbol">≋</span> aliases</div><div class="prop-value">'+aliases.map(esc).join(', ')+'</div>':'')+
   (tags.length?'<div class="prop-key"><span class="prop-symbol">#</span> tags</div><div class="prop-value property-tags">'+tags.map(tag=>'<button class="tag-pill" data-tag="'+esc(tag)+'">#'+esc(tag)+'</button>').join('')+'</div>':'')+
+  (cssclasses.length?'<div class="prop-key"><span class="prop-symbol">◈</span> cssclasses</div><div class="prop-value">'+cssclasses.map(esc).join(', ')+'</div>':'')+
   '</div>':'')+'</div>'
 }
 function graphHtml(){
-  const current=playbooks.find(path=>documents[path].meta.id===graphFocus)
+  const current=playbooks.find(path=>pathSlug(path)===graphFocus)
   const focusTitle=current?label(current):'Select a node'
   const checked=name=>graphOptions[name]?' checked':''
   const slider=(name,min,max,step,title)=>'<label class="settings-slider"><span>'+title+'</span><input type="range" data-graph-option="'+name+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+graphOptions[name]+'"></label>'
@@ -142,14 +165,11 @@ function productOverview(){
   return '<div class="article-wrap"><div class="eyebrow">DOCUMENTATION / PRODUCTS</div><h1 class="document-title">Products</h1><p class="doc-description">제품별 기준과 예외를 기록하는 문서입니다.</p><div class="product-list">'+products.map(path=>'<a data-doc="'+esc(path)+'" href="'+docUrl(path)+'"><span class="doc-icon">▧</span><span><strong>'+esc(label(path))+'</strong><small>'+esc(path)+'</small></span><span class="chevron">↗</span></a>').join('')+'</div></div>'
 }
 function articleHtml(doc){
-  const meta=doc.meta
-  const edges=(meta.links||[]).map(l=>{
-    const dest=playbooks.find(path=>documents[path].meta.id===l.to)
-    return dest?'<a class="backlink" data-doc="'+esc(dest)+'" href="'+docUrl(dest)+'"><span>↗</span><span><strong>'+esc(label(dest))+'</strong><small>'+esc(l.label||l.type||'관련 문서')+'</small></span></a>':''
-  }).join('')
-  return '<div class="article-wrap"><div class="eyebrow">'+esc(doc.path)+'</div><h1 class="document-title">'+esc(meta.title||label(doc.path))+'</h1>'+(meta.description?'<p class="doc-description">'+esc(meta.description)+'</p>':'')+
-  propertyHtml(doc)+'<article class="markdown">'+markdownHtml(doc)+'</article>'+
-  (edges?'<section class="references"><div class="references-heading">Linked mentions <span>'+((meta.links||[]).length)+'</span></div>'+edges+'</section>':'')+'</div>'
+  const links=[...new Set(wikiTargets(doc.body).map(ref=>findWikiPath(ref,doc.path)).filter(Boolean))]
+  const edges=links.map(dest=>'<a class="backlink" data-doc="'+esc(dest)+'" href="'+docUrl(dest)+'"><span>↗</span><span><strong>'+esc(label(dest))+'</strong><small>Internal link</small></span></a>').join('')
+  return '<div class="article-wrap"><div class="eyebrow">'+esc(doc.path)+'</div><h1 class="document-title">'+esc(label(doc.path))+'</h1>'+
+    propertyHtml(doc)+'<article class="markdown">'+markdownHtml(doc)+'</article>'+
+    (edges?'<section class="references"><div class="references-heading">Linked notes <span>'+links.length+'</span></div>'+edges+'</section>':'')+'</div>'
 }
 function mainHtml(){
   return selected==='playbooks'?graphHtml():selected==='products'?productOverview():articleHtml(documents[selected])
