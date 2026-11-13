@@ -1,18 +1,9 @@
 ---
-id: command-processing
-title: Command Processing
-description: Admin 및 I/O Command의 처리 상태와 비정상 완료를 분석합니다.
-category: runtime
-tags: [nvme, command, cqe]
-links:
-  - to: fw-state
-    type: check_when
-    label: 명령 처리 정체가 의심되면 FW 상태 확인
-  - to: performance
-    type: related
-    label: Latency와 Throughput 영향 참고
+tags: [area/runtime, nvme, command, cqe]
 ---
 # Command Processing
+
+Admin 및 I/O Command의 처리 상태와 비정상 완료를 분석합니다.
 
 ## 분석 질문
 1. Admin 또는 I/O Command 중 무엇이 문제인가?
@@ -22,3 +13,8 @@ links:
 
 ## Dump Agent 가이드
 명령의 관측 상태, 증거 위치, 불확실성을 분리해 반환한다.
+
+## Related Playbooks
+
+- [[playbooks/fw-state|fw-state]] — 명령 처리 정체가 의심되면 FW 상태 확인
+- [[playbooks/performance|performance]] — Latency와 Throughput 영향 참고
