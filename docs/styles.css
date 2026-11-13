@@ -239,3 +239,56 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
  .graph-workspace .graph-bottom{display:flex;flex-direction:column;gap:7px}
  .graph-workspace .graph-legend{max-width:none}
 }
+
+/* Obsidian Graph view: fullscreen canvas and collapsible floating settings. */
+.graph-workspace{padding:0!important;position:relative;overflow:hidden}
+.graph-workspace .graph-shell{border:0!important;border-radius:0!important;background:#202020;margin:0!important;width:100%!important}
+.graph-workspace .graph-head{height:37px;flex:0 0 37px;background:#252525;border-bottom:1px solid #363636;padding:0 13px}
+.graph-head-name{font-weight:550;font-size:12px;letter-spacing:0}
+.graph-head-actions{margin-left:auto}
+.graph-workspace .graph-canvas{position:relative;flex:1;background:#202020}
+.graph-workspace .graph-canvas::before{display:none}
+.graph-workspace .graph-bottom{min-height:27px;flex:0 0 27px;padding:5px 14px;background:#242424;color:#8b8b8b;font-size:10px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.graph-help{color:#696969;font-size:10px}
+.graph-overlay{position:absolute;top:49px;left:13px;z-index:4;display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+.graph-overlay .graph-modes{background:rgba(36,36,36,.94);border:1px solid #414141;box-shadow:0 4px 14px #0002}
+.graph-context-tools{display:flex;align-items:center;gap:10px;color:#aaa;font-size:11px;background:rgba(35,35,35,.92);border-radius:5px}
+.graph-context-tools:empty{display:none}
+.graph-center-label{max-width:220px}
+.graph-settings{position:absolute;right:15px;top:47px;z-index:6;width:246px;max-height:calc(100% - 95px);overflow-y:auto;background:#252525;border:1px solid #3e3e3e;border-radius:7px;box-shadow:0 15px 38px #0006;display:none;color:#bdbdbd;font-size:11px}
+.graph-settings.is-open{display:block}
+.settings-top{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;background:#292929;border-bottom:1px solid #3b3b3b}
+.settings-top strong{font-size:11px;font-weight:600;color:#d5d5d5}
+.settings-top button{background:transparent;border:0;color:#999;font-size:18px;line-height:14px}
+.graph-settings details{border-bottom:1px solid #3b3b3b}
+.graph-settings details:last-child{border-bottom:0}
+.graph-settings summary{padding:12px 13px;cursor:pointer;font-size:11px;font-weight:600;color:#c8c8c8;list-style:none}
+.graph-settings summary::before{content:"›";display:inline-block;font-size:16px;color:#929292;transform:translateY(1px);margin-right:7px}
+.graph-settings details[open] summary::before{transform:translateY(1px) rotate(90deg)}
+.graph-settings summary::-webkit-details-marker{display:none}
+.settings-group{padding:2px 13px 13px;display:flex;flex-direction:column;gap:11px}
+.settings-search{height:28px;background:#1e1e1e;border:1px solid #3d3d3d;border-radius:5px;display:flex;align-items:center;gap:6px;padding:0 8px;color:#929292}
+.settings-search span{font-size:19px}
+.settings-search input{min-width:0;width:100%;background:transparent;border:0;color:#ddd;outline:none;font-size:11px}
+.settings-search input::placeholder{color:#818181}
+.settings-toggle{display:flex;align-items:center;justify-content:space-between;color:#adadad;cursor:pointer}
+.settings-toggle input{position:absolute;opacity:0;width:1px;height:1px}
+.settings-toggle i{width:27px;height:15px;background:#4a4a4a;border-radius:9px;position:relative;flex:none;transition:background .15s}
+.settings-toggle i::before{content:"";position:absolute;top:2px;left:2px;height:11px;width:11px;border-radius:50%;background:#ddd;transition:transform .15s}
+.settings-toggle input:checked+i{background:#75619a}
+.settings-toggle input:checked+i::before{transform:translateX(12px)}
+.settings-toggle input:focus-visible+i{outline:2px solid #ac91e4;outline-offset:2px}
+.settings-caption{font-size:10px;color:#858585;margin-bottom:2px}
+.settings-group-row{display:flex;align-items:center;justify-content:space-between;color:#aaa}
+.settings-color{width:12px;height:12px;border-radius:50%;border:1px solid #ffffff22}
+.settings-slider{display:grid;gap:7px;color:#aaa}
+.settings-slider input{width:100%;accent-color:#9f83d0;height:14px}
+.graph-canvas-controls{position:absolute;right:14px;bottom:45px;display:flex;flex-direction:column;z-index:3;gap:2px}
+.graph-canvas-controls button{height:28px;width:29px;background:#292929dd;color:#aaa;border:1px solid #434343;border-radius:4px;font-size:16px}
+.graph-canvas-controls button:hover{color:#e5e5e5;background:#333}
+@media(max-width:650px){
+.graph-settings{right:7px;top:43px;width:min(245px,calc(100% - 14px))}
+.graph-overlay{left:8px;top:45px}
+.graph-help{display:none}
+.graph-workspace .graph-canvas{min-height:280px}
+}
