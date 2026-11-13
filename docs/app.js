@@ -82,7 +82,7 @@ function treeHtml(entries,prefix='',depth=0){
 }
 function sidebarHtml(){
  const p=treeHtml(tree(playbooks,'playbooks/'),'playbooks/'),q=treeHtml(tree(products,'products/'),'products/')
- return '<aside class="sidebar"><a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Detective">🕵️</span> CIA Wiki</a><div class="sidebar-caption">DOCUMENTATION</div>'+
+ return '<aside class="sidebar"><a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Sunglasses">🕶️</span> CIA Wiki</a><div class="sidebar-caption">DOCUMENTATION</div>'+
  '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
  '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">Playbooks</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbooks">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
  '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">Products</button><button class="section-toggle" data-top="products" aria-label="Toggle Products">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
