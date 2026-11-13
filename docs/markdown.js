@@ -47,7 +47,6 @@
      return '['+(alias||target.heading||label(target.path)).replace(/[\[\]]/g,'')+']('+target.path+(target.heading?'#'+slug(target.heading):'')+')'
    })
    const renderNormal=raw=>{
-     // Fenced code examples must remain literal; WikiLinks are not expanded there.
      const fenced=/((?:^|\n)(?:\x60{3,}|~{3,})[^\n]*\n[\s\S]*?(?:^|\n)(?:\x60{3,}|~{3,})[ \t]*(?=\n|$))/g
      return marked.parse(raw.split(fenced).map(part=>/^(?:\n)?(?:\x60{3,}|~{3,})/.test(part)?part:convert(part)).join(''),{renderer})
    }
