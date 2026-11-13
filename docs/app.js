@@ -14,7 +14,7 @@ const categories = {
   performance:{label:'Performance',color:'#c9b17f'},
   internal:{label:'Internal',color:'#86bca8'}
 }
-let documents={}, playbooks=[], products=[]
+let documents={}, playbooks=[], products=[], folders={}
 
 const pathSlug = path => path.replace(/\.md$/, '')
 function findWikiPath(raw,currentPath){
@@ -37,7 +37,7 @@ let graphMode='global', graphFocus=null, graphDepth=1
 let graphSettingsOpen=true
 let graphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:410, linkDistance:135, showLabels:true}
 
-const docUrl = path => path==='playbooks'||path==='products'?'?view='+path:'?doc='+encodeURIComponent(path)
+const docUrl = path => path==='playbooks'||path==='products'?'?view='+path:folders[path]?'?folder='+encodeURIComponent(path):'?doc='+encodeURIComponent(path)
 function parse(raw){
   const match=raw.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n/)
   return match?{meta:yaml.load(match[1])||{},body:raw.slice(match[0].length)}:{meta:{},body:raw}
@@ -45,17 +45,17 @@ function parse(raw){
 async function load(){
   const r=await fetch('./manifest.json'); if(!r.ok)throw Error('manifest.json을 읽을 수 없습니다')
   const manifest=await r.json()
-  playbooks=manifest.playbooks; products=manifest.products
-  await Promise.all([...playbooks,...products].map(async path=>{
+  playbooks=manifest.playbooks; products=manifest.products; folders=manifest.folders||{}
+  await Promise.all([...new Set([...playbooks,...products,...Object.values(folders)])].map(async path=>{
     const res=await fetch('./'+path);if(!res.ok)throw Error(path+'를 읽을 수 없습니다')
     documents[path]={...parse(await res.text()),path}
   }))
   const params=new URLSearchParams(location.search)
-  selected=documents[params.get('doc')]?params.get('doc'):(params.get('view')==='products'?'products':'playbooks')
+  selected=documents[params.get('doc')]?params.get('doc'):(folders[params.get('folder')]?params.get('folder'):params.get('view')==='products'?'products':'playbooks')
   render()
   if(params.get('heading'))document.getElementById(window.noteMarkdown.slug(params.get('heading')))?.scrollIntoView({block:'start'})
 }
-function label(path){return documents[path]?.body.match(/^#\s+(.+)$/m)?.[1]?.trim()||path.split('/').pop().replace(/\.md$/,'')}
+function label(path){return documents[folders[path]||path]?.body.match(/^#\s+(.+)$/m)?.[1]?.trim()||path.split('/').pop().replace(/\.md$/,'')}
 function tree(paths,prefix){
   const map={}
   for(const path of paths){
@@ -80,9 +80,9 @@ function treeHtml(entries,prefix='',depth=0){
   }).join('')
 }
 function sidebarHtml(){
- const p=treeHtml(tree(playbooks,'playbooks/')),q=treeHtml(tree(products,'products/'))
+ const p=treeHtml(tree(playbooks,'playbooks/'),'playbooks/'),q=treeHtml(tree(products,'products/'),'products/')
  return '<aside class="sidebar"><a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark">◇</span> SSD Analysis</a><div class="sidebar-caption">DOCUMENTATION</div>'+
- '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Search files" aria-label="Search files" value="'+esc(search)+'"></div>'+
+ '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
  '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">Playbooks</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbooks">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
  '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">Products</button><button class="section-toggle" data-top="products" aria-label="Toggle Products">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
 }
@@ -128,7 +128,7 @@ function graphHtml(){
   const forces='<details><summary>Forces</summary><div class="settings-group">'+
     slider('repel',120,900,20,'Repel force')+slider('linkDistance',70,260,10,'Link distance')+
     '</div></details>'
-  return '<div class="graph-workspace">'+breadcrumb('playbooks')+'<section class="graph-shell" aria-label="Interactive Playbook Graph">'+
+  return '<div class="graph-workspace">'+breadcrumb('playbooks')+'<h1 class="graph-page-title">'+esc(label('playbooks'))+'</h1><section class="graph-shell" aria-label="Interactive Playbook Graph">'+
     '<div class="graph-head"><div class="graph-head-actions">'+
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '<button class="graph-toolbar-button" data-graph-reset title="Reset view" aria-label="Reset view">⟲</button>'+
@@ -169,11 +169,11 @@ function articleHtml(doc){
  (links||'<p class="empty-backlinks">No backlinks</p>')+'</section></div>'
 }
 function mainHtml(){
-  return selected==='playbooks'?graphHtml():selected==='products'?productOverview():articleHtml(documents[selected])
+  return folders[selected]?folderHtml(selected):articleHtml(documents[selected])
 }
 function select(path,heading=''){
   if(path==='playbooks'){graphMode='global';graphFocus=null}
-  if(path!=='playbooks'&&path!=='products'&&!documents[path])return
+  if(!folders[path]&&!documents[path])return
   selected=path
   history.pushState({},'',docUrl(path)+(heading?'&heading='+encodeURIComponent(heading):''))
   render()
@@ -185,7 +185,7 @@ function render(){
   window.disposePlaybookGraph?.()
   root.innerHTML='<div class="shell">'+sidebarHtml()+'<main class="main"><div class="page-content'+(selected==='playbooks'?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
   root.querySelectorAll('[data-doc]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.doc,node.dataset.heading||'')}))
-  root.querySelectorAll('[data-section]').forEach(node=>node.addEventListener('click',()=>select(node.dataset.section)))
+  root.querySelectorAll('[data-section]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.section)}))
   root.querySelectorAll('[data-top]').forEach(node=>node.addEventListener('click',()=>{
     expanded.has(node.dataset.top)?expanded.delete(node.dataset.top):expanded.add(node.dataset.top);render()
   }))
@@ -225,7 +225,7 @@ function render(){
 }
 window.addEventListener('popstate',()=>{
   const p=new URLSearchParams(location.search)
-  selected=documents[p.get('doc')]?p.get('doc'):(p.get('view')==='products'?'products':'playbooks')
+  selected=documents[p.get('doc')]?p.get('doc'):(folders[p.get('folder')]?p.get('folder'):p.get('view')==='products'?'products':'playbooks')
   render()
   const h=p.get('heading')
   if(h)document.getElementById(window.noteMarkdown.slug(h))?.scrollIntoView({block:'start'})
