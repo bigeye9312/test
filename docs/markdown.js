@@ -46,7 +46,11 @@
      if(!target)return alias||ref
      return '['+(alias||target.heading||label(target.path)).replace(/[\[\]]/g,'')+']('+target.path+(target.heading?'#'+slug(target.heading):'')+')'
    })
-   const renderNormal=raw=>marked.parse(convert(raw),{renderer})
+   const renderNormal=raw=>{
+     // Fenced code examples must remain literal; WikiLinks are not expanded there.
+     const fenced=/((?:^|\n)(?:\x60{3,}|~{3,})[^\n]*\n[\s\S]*?(?:^|\n)(?:\x60{3,}|~{3,})[ \t]*(?=\n|$))/g
+     return marked.parse(raw.split(fenced).map(part=>/^(?:\n)?(?:\x60{3,}|~{3,})/.test(part)?part:convert(part)).join(''),{renderer})
+   }
    const lines=doc.body.split(/\r?\n/),out=[],normal=[]
    const flush=()=>{if(normal.length){out.push(renderNormal(normal.join('\n')));normal.length=0}}
    for(let i=0;i<lines.length;){
