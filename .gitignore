@@ -1,3 +1,5 @@
 node_modules/
 dist/
 .DS_Store
+/docs/_quartz/.engine/
+/docs/_quartz/dist/
