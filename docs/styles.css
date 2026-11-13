@@ -287,3 +287,5 @@ body{background:#fff;color:#27313c}
 @media(max-width:570px){
   .graph-overlay{left:10px;max-width:calc(100% - 90px)}
 }
+
+.sidebar-search>.search-icon,.settings-search>.search-icon{display:inline-block;transform:scaleX(-1)}
