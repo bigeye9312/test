@@ -176,3 +176,66 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .graph-bottom{display:block}
 .graph-legend{margin-top:9px}
 }
+
+/* Graph workspace: dense, app-like controls, consistent with Obsidian chrome. */
+.editor-content.is-graph{display:flex;flex-direction:column;overflow:hidden}
+.graph-workspace{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px}
+.graph-workspace .graph-shell{flex:1;min-height:0;display:flex;flex-direction:column;margin:0;width:100%;max-width:none;border:1px solid #343434;border-radius:5px;background:#202020}
+.graph-workspace .graph-head{flex:0 0 40px;height:40px;padding:0 13px;background:#262626;gap:18px}
+.graph-head-left,.graph-head-actions{display:flex;align-items:center;min-width:0;gap:11px}
+.graph-head-name{font-size:12px;color:#d4d4d4;white-space:nowrap;font-weight:600}
+.graph-head-separator{color:#616161;font-size:13px}
+.graph-crumb{font-size:11px;color:#9b9b9b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.graph-modes{display:flex;gap:2px;padding:3px;background:#202020;border:1px solid #383838;border-radius:5px}
+.graph-modes button{background:transparent;border:0;border-radius:3px;font-size:11px;color:#959595;padding:5px 11px;min-width:54px;cursor:pointer}
+.graph-modes button:hover:not(:disabled){background:#303030;color:#ddd}
+.graph-modes button.active{background:#45404d;color:#e2d5f4}
+.graph-modes button:disabled{opacity:.33;cursor:default}
+.graph-toolbar-button{border:0;background:transparent;color:#929292;font-size:18px;padding:5px 7px;border-radius:4px}
+.graph-toolbar-button:hover{background:#353535;color:#dedede}
+.graph-subbar{height:42px;flex:0 0 42px;padding:0 14px;border-bottom:1px solid #323232;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#222222}
+.graph-subbar-left,.graph-subbar-right{display:flex;align-items:center;gap:12px;min-width:0}
+.graph-subbar-left{flex:1}
+.graph-context-label,.graph-center-label{color:#8c8c8c;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.graph-center-label{color:#c8b9df}
+.graph-control-label{display:flex;align-items:center;gap:8px;color:#999;font-size:11px;white-space:nowrap}
+.graph-control-label select{background:#292929;border:1px solid #414141;border-radius:4px;padding:5px 24px 5px 9px;color:#d0d0d0;font-size:11px;max-width:155px}
+.graph-back{background:transparent;border:0;color:#a99bc4;font-size:11px;padding:7px 0;white-space:nowrap}
+.graph-back:hover{color:#d2c3ed}
+.graph-find{display:flex;align-items:center;gap:6px;border:1px solid #3d3d3d;border-radius:4px;background:#1e1e1e;color:#929292;padding:0 8px;height:27px}
+.graph-find span{font-size:17px}
+.graph-find input{border:0;outline:0;color:#d0d0d0;background:transparent;font-size:11px;width:118px}
+.graph-find input::placeholder{color:#777}
+.graph-zoom{background:transparent;border:0;border-radius:4px;color:#aaa;font-size:18px;width:25px;height:25px;line-height:20px}
+.graph-zoom:hover{background:#353535;color:#eee}
+.graph-workspace .graph-canvas{flex:1;height:auto;min-height:240px;background:#202020}
+.graph-workspace .graph-canvas svg{height:100%}
+.graph-workspace .graph-bottom{flex:0 0 auto;min-height:36px;padding:8px 13px;gap:16px;border-top:1px solid #333;background:#252525}
+.graph-workspace .graph-status{font-size:11px;color:#9b9b9b;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.graph-workspace .graph-legend{gap:12px}
+.force-node.is-focus .node-core{stroke:#e9dff5;stroke-width:1.8}
+.force-node.is-focus .node-halo{opacity:.33}
+.graph-footnote{width:100%;max-width:none;margin:9px 0 0;color:#777;padding:0 5px;font-size:10.5px;flex:0 0 auto}
+@media(max-width:900px){
+ .graph-workspace{padding:7px}
+ .graph-modes button{min-width:0;padding:5px 7px}
+ .graph-workspace .graph-bottom{align-items:flex-start}
+ .graph-legend{max-width:50%}
+}
+@media(max-width:650px){
+ .editor-content.is-graph{min-height:350px}
+ .graph-workspace{padding:5px}
+ .graph-head{padding:0 8px}
+ .graph-crumb{display:none}
+ .graph-head-separator{display:none}
+ .graph-head-actions{gap:5px}
+ .graph-subbar{padding:0 8px}
+ .graph-subbar-left{gap:7px}
+ .graph-subbar-right{gap:4px}
+ .graph-find input{width:64px}
+ .graph-control-label select{max-width:95px}
+ .graph-center-label{max-width:80px}
+ .graph-workspace .graph-canvas{min-height:310px}
+ .graph-workspace .graph-bottom{display:flex;flex-direction:column;gap:7px}
+ .graph-workspace .graph-legend{max-width:none}
+}
