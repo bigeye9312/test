@@ -44,7 +44,9 @@
       neighbors.get(link.target)?.add(link.source)
     })
 
-    const svg = d3.select(container).append('svg')
+    const canvas = container.querySelector('.graph-canvas')
+    if (!canvas) return
+    const svg = d3.select(canvas).append('svg')
       .attr('viewBox', '0 0 ' + width + ' ' + height)
       .attr('role', 'img')
       .attr('aria-label', 'Playbooks 상호작용 그래프: 노드를 클릭하면 문서가 열립니다')
