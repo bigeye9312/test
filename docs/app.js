@@ -32,7 +32,7 @@ function findWikiPath(raw,currentPath){
 const wikiTargets = body => [...body.matchAll(/\[\[([^\]]+)\]\]/g)].map(match=>match[1].split('|')[0])
 
 let selected='playbooks', expanded=new Set(['playbooks','products'])
-let search='', showProperties=true, graphFilter=''
+let search='', graphFilter=''
 let graphMode='global', graphFocus=null, graphDepth=1
 let graphSettingsOpen=true
 let graphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:410, linkDistance:135, showLabels:true}
@@ -82,7 +82,7 @@ function treeHtml(entries,prefix='',depth=0){
 }
 function sidebarHtml(){
  const p=treeHtml(tree(playbooks,'playbooks/'),'playbooks/'),q=treeHtml(tree(products,'products/'),'products/')
- return '<aside class="sidebar"><a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark">◇</span> SSD Analysis</a><div class="sidebar-caption">DOCUMENTATION</div>'+
+ return '<aside class="sidebar"><a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark">◇</span> CIA Wiki</a><div class="sidebar-caption">DOCUMENTATION</div>'+
  '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
  '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">Playbooks</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbooks">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
  '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">Products</button><button class="section-toggle" data-top="products" aria-label="Toggle Products">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
@@ -100,15 +100,12 @@ function resolveLink(href,docPath){
   return documents[candidate]?candidate:null
 }
 function markdownHtml(doc){return window.noteMarkdown.render(doc,documents,docUrl,label)}
-function propertyHtml(doc){
- const tags=Array.isArray(doc.meta.tags)?doc.meta.tags:[]
- const aliases=Array.isArray(doc.meta.aliases)?doc.meta.aliases:[]
- if(!tags.length&&!aliases.length)return ''
- return '<div class="properties'+(showProperties?'':' collapsed')+'"><button class="properties-toggle" data-properties><span class="caret">'+(showProperties?'⌄':'›')+'</span> Properties</button>'+
- (showProperties?'<div class="property-grid">'+
- (aliases.length?'<div class="prop-key">aliases</div><div class="prop-value">'+aliases.map(esc).join(', ')+'</div>':'')+
- (tags.length?'<div class="prop-key">tags</div><div class="prop-value property-tags">'+tags.map(tag=>'<button class="tag-pill" data-tag="'+esc(tag)+'">#'+esc(tag)+'</button>').join('')+'</div>':'')+
- '</div>':'')+'</div>'
+function pageTags(doc){
+ const tags=Array.isArray(doc?.meta?.tags)?doc.meta.tags:[]
+ if(!tags.length)return ''
+ return '<footer class="page-tags" aria-label="Page labels"><span class="page-tags-label">Labels</span><div class="page-tags-list">'+
+   tags.map(tag=>'<button type="button" class="tag-pill" data-tag="'+esc(tag)+'">'+esc(tag)+'</button>').join('')+
+   '</div></footer>'
 }
 function graphHtml(){
   const current=playbooks.find(path=>pathSlug(path)===graphFocus)
@@ -141,7 +138,7 @@ function graphHtml(){
     filters+groups+display+forces+'</aside>'+
     '<div class="graph-canvas-controls"><button data-zoom-in title="Zoom in" aria-label="Zoom in">+</button><button data-zoom-out title="Zoom out" aria-label="Zoom out">−</button><span class="graph-node-count" aria-live="polite">0 nodes</span></div>'+
     
-    '</section></div>'
+    '</section>'+pageTags(documents[folders.playbooks])+'</div>'
 }
 function breadcrumb(path){
  const parts=path.split('/')
@@ -162,8 +159,8 @@ function folderHtml(folder){
  const files=[...playbooks,...products].filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
  const children=[...subfolders.map(path=>({path,folder:true})),...files.map(path=>({path,folder:false}))]
  return '<div class="article-wrap">'+breadcrumb(folder)+'<h1 class="document-title">'+esc(label(folder))+'</h1>'+
- propertyHtml(doc)+'<div class="markdown">'+markdownHtml(doc)+'</div>'+
- (children.length?'<div class="folder-children">'+children.map(item=>'<a href="'+docUrl(item.path)+'" '+(item.folder?'data-section':'data-doc')+'="'+esc(item.path)+'"><span class="folder-child-icon">'+(item.folder?'▤':'▧')+'</span><strong>'+esc(label(item.path))+'</strong><span class="folder-child-arrow">›</span></a>').join('')+'</div>':'')+'</div>'
+ '<div class="markdown">'+markdownHtml(doc)+'</div>'+
+ (children.length?'<div class="folder-children">'+children.map(item=>'<a href="'+docUrl(item.path)+'" '+(item.folder?'data-section':'data-doc')+'="'+esc(item.path)+'"><span class="folder-child-icon">'+(item.folder?'▤':'▧')+'</span><strong>'+esc(label(item.path))+'</strong><span class="folder-child-arrow">›</span></a>').join('')+'</div>':'')+pageTags(doc)+'</div>'
 }
 function articleHtml(doc){
  const incoming=Object.values(documents).filter(source=>{
@@ -174,9 +171,9 @@ function articleHtml(doc){
  })
  const links=incoming.map(source=>'<a class="backlink" data-doc="'+esc(source.path)+'" href="'+docUrl(source.path)+'"><span>↗</span><span><strong>'+esc(label(source.path))+'</strong><small>'+esc(source.path)+'</small></span></a>').join('')
  return '<div class="article-wrap">'+breadcrumb(doc.path)+'<h1 class="document-title">'+esc(label(doc.path))+'</h1>'+
- propertyHtml(doc)+'<article class="markdown">'+markdownHtml(doc)+'</article>'+
+ '<article class="markdown">'+markdownHtml(doc)+'</article>'+
  '<section class="references"><div class="references-heading">Backlinks <span>'+incoming.length+'</span></div>'+
- (links||'<p class="empty-backlinks">No backlinks</p>')+'</section></div>'
+ (links||'<p class="empty-backlinks">No backlinks</p>')+'</section>'+pageTags(doc)+'</div>'
 }
 function mainHtml(){
   return folders[selected]?folderHtml(selected):articleHtml(documents[selected])
@@ -207,7 +204,6 @@ function render(){
     render()
     const input=$('#sidebar-search');input?.focus();input?.setSelectionRange(value.length,value.length)
   })
-  root.querySelectorAll('[data-properties]').forEach(node=>node.addEventListener('click',()=>{showProperties=!showProperties;render()}))
   root.querySelectorAll('[data-tag]').forEach(node=>node.addEventListener('click',()=>{search=node.dataset.tag;render();$('#sidebar-search')?.focus()}))
   if(selected==='playbooks'){
     const navigateFocus=id=>{
