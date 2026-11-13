@@ -186,3 +186,74 @@ details.callout>summary.callout-title{cursor:pointer;list-style:revert;padding:0
 .metadata-items:not(.metadata-tags){column-gap:12px;row-gap:5px}
 .meta-backlink{display:inline-flex;align-items:baseline;gap:4px;white-space:normal}
 .meta-backlink-arrow{color:#989898;font-size:12px;font-weight:500;line-height:1}
+
+
+/* CIA Wiki light reading shell. Graph canvas and graph controls retain dark styling. */
+:root{color-scheme:light;background:#fff;color:#27313c}
+body{background:#fff;color:#27313c}
+.shell{background:#fff}
+.sidebar{background:#f7f8fa;border-right:1px solid #e5e7eb}
+.brand{color:#202833}
+.sidebar-search{background:#fff;border-color:#dfe3e8;color:#717b89}
+.sidebar-search input{color:#283443}
+.sidebar-search input::placeholder{color:#8b94a0}
+.section-link{color:#374151}
+.section-link:hover,.section-link.selected{background:#e8ebf1;color:#1f2937}
+.section-toggle,.tree-folder-expand{color:#757f8c}
+.tree-item,.tree-folder,.tree-folder-link{color:#586474}
+.tree-item:hover,.tree-folder:hover,.tree-folder-row:hover{background:#ebedf2;color:#202b38}
+.tree-folder-link:hover{color:#17212e}
+.tree-item.selected,.tree-folder-link.selected{background:#e8e8f5;color:#514a84}
+.tree-icon,.folder-child-icon{color:#7b84a0}
+.main,.page-content{background:#fff;color:#27313c}
+.document-title,.graph-page-title{color:#202834}
+.doc-description{color:#5c6774}
+.breadcrumbs{color:#8a93a0}
+.breadcrumbs a{color:#637084}
+.breadcrumbs a:hover{color:#3f4288;background:#eff0fa}
+.breadcrumbs a.breadcrumb-current{color:#242d3a}
+.breadcrumbs a.breadcrumb-current:hover{color:#313a6e;background:#eff0fa}
+.breadcrumb-divider{color:#b5bdc8}
+.markdown{color:#354152}
+.markdown h1,.markdown h2,.markdown h3,.markdown h4,.markdown strong{color:#232d3a}
+.markdown h2{border-bottom-color:#e5e8ed}
+.markdown a{color:#495fb2}
+.markdown a:hover{color:#303e8c}
+.markdown code{background:#f1f3f7;color:#8d4679}
+.markdown pre{background:#f7f8fb;border-color:#e3e7ed}
+.markdown pre code{background:none;color:#283443}
+.markdown td,.markdown th{border-color:#dfe4ea}
+.markdown th{background:#f5f6f9}
+.markdown blockquote{background:#f6f4fa;border-left-color:#9683b7;color:#586274}
+.callout{border-color:color-mix(in srgb,var(--callout-color) 34%,#e2e6ed);background:color-mix(in srgb,var(--callout-color) 7%,white)}
+.callout-note,.callout-info{--callout-color:#3772bd}
+.callout-tip,.callout-success{--callout-color:#248769}
+.callout-warning,.callout-caution,.callout-important{--callout-color:#9c710d}
+.callout-danger,.callout-failure,.callout-bug{--callout-color:#be4754}
+.callout-question,.callout-example{--callout-color:#7959ac}
+.callout-quote,.callout-abstract{--callout-color:#627080}
+.folder-children>a,.product-list a{background:#fff;border-color:#e3e7ec}
+.folder-children>a:hover,.product-list a:hover{background:#f5f6fa;border-color:#ced4df}
+.folder-children strong,.product-list strong{color:#293545}
+.folder-child-arrow,.chevron{color:#99a3b0}
+.product-list small{color:#7d8794}
+.page-metadata{border-top-color:#e5e8ed}
+.metadata-icon{color:#828c99}
+.meta-backlink{color:#5266a3}
+.meta-backlink:hover{color:#35467e}
+.meta-backlink-arrow{color:#8c98aa}
+.meta-tag{color:#5868a0}
+.meta-tag:hover{color:#35457b}
+.graph-workspace{background:#fff;color:#27313c}
+.graph-workspace>.breadcrumbs{background:transparent;border:0}
+.graph-workspace>.breadcrumbs a{color:#637084}
+.graph-workspace>.breadcrumbs a.breadcrumb-current{color:#242d3a}
+.graph-page-title{color:#202834}
+.graph-shell{background:#202020;color:#d2d2d2}
+.graph-shell .graph-head,.graph-shell .graph-bottom{color:#c9c9c9}
+.graph-shell .graph-settings{color:#bbb}
+.graph-shell .settings-search input{color:#ddd}
+.graph-shell .graph-overlay,.graph-shell .graph-floating-tools{color:#c6b8e1}
+.graph-workspace>.page-metadata{color:#66717e}
+.loading-error{color:#8a2932}
+@media(max-width:570px){.sidebar{border-bottom:1px solid #e5e7eb}}
