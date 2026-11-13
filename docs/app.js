@@ -137,7 +137,7 @@ function graphHtml(){
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '</div></div>'+
     '<div class="graph-canvas"></div>'+
-    (graphMode==='local'?'<div class="graph-overlay"><div class="graph-context-tools"><button data-graph-back class="graph-back" type="button">‹ &nbsp; Global graph</button><span class="graph-center-label">'+esc(focusTitle)+'</span><label class="graph-control-label">Depth <select id="graph-depth"><option value="1"'+(graphDepth===1?' selected':'')+'>1</option><option value="2"'+(graphDepth===2?' selected':'')+'>2</option></select></label></div></div>':'')+
+    (graphMode==='local'?'<div class="graph-overlay"><button data-graph-back class="graph-back" type="button">← Global</button><span class="graph-center-label" title="'+esc(focusTitle)+'">'+esc(focusTitle)+'</span></div><label class="graph-depth-control">Depth <select id="graph-depth" aria-label="Local graph depth"><option value="1"'+(graphDepth===1?' selected':'')+'>1</option><option value="2"'+(graphDepth===2?' selected':'')+'>2</option></select></label>':'')+
     '<aside class="graph-settings'+(graphSettingsOpen?' is-open':'')+'" aria-label="Settings">'+
     '<div class="settings-top"><strong>Settings</strong><button type="button" data-settings-close title="Close settings" aria-label="Close settings">×</button></div>'+
     filters+groups+display+forces+'</aside>'+
