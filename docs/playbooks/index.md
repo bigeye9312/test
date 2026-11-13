@@ -1,5 +1,5 @@
 ---
 tags: [playbooks]
 ---
-# Playbooks
+# Playbook
 
