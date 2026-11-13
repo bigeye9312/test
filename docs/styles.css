@@ -26,3 +26,51 @@ details.callout>summary.callout-title{cursor:pointer;list-style:revert;padding:0
 .graph-workspace>.breadcrumbs a{font-weight:550}
 .article-wrap>.breadcrumbs{margin-bottom:28px}
 @media(max-width:570px){.graph-workspace>.breadcrumbs{padding:7px 12px}.article-wrap>.breadcrumbs{margin-bottom:20px}}
+
+/* Playbooks has the same breadcrumb placement as a reading page, without a header/banner. */
+.graph-workspace{background:#1e1e1e}
+.graph-workspace>.breadcrumbs{
+  width:calc(100% - 88px);
+  max-width:762px;
+  align-self:center;
+  flex:none;
+  margin:0 0 28px;
+  padding:60px 0 0;
+  min-height:0;
+  background:transparent;
+  border:0;
+}
+.graph-workspace>.breadcrumbs a{font-weight:400}
+.graph-shell{position:relative}
+.graph-floating-tools{
+  position:absolute;
+  top:12px;
+  right:15px;
+  z-index:5;
+  display:flex;
+  gap:3px;
+  align-items:center;
+  padding:3px;
+  background:#262626e8;
+  border:1px solid #414141;
+  border-radius:5px;
+}
+.graph-toolbar-button{
+  border:0;
+  background:transparent;
+  color:#a0a0a0;
+  border-radius:4px;
+  height:26px;
+  min-width:28px;
+  font-size:18px;
+}
+.graph-toolbar-button:hover{background:#3a3a3a;color:#eee}
+.graph-settings{top:53px}
+.graph-overlay{top:52px}
+@media(max-width:750px){
+ .graph-workspace>.breadcrumbs{width:calc(100% - 50px);padding-top:38px;margin-bottom:24px}
+}
+@media(max-width:570px){
+ .graph-workspace>.breadcrumbs{width:calc(100% - 36px);padding-top:27px;margin-bottom:20px}
+ .graph-floating-tools{top:8px;right:8px}
+}
