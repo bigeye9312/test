@@ -62,7 +62,12 @@
      const title=m[3]||kind.charAt(0).toUpperCase()+kind.slice(1)
      const inner=[];i++
      while(i<lines.length&&/^>/.test(lines[i]))inner.push(lines[i++].replace(/^>\s?/,''))
-     out.push('<aside class="callout callout-'+kind+'"><div class="callout-title">'+esc(title)+'</div><div class="callout-body">'+renderNormal(inner.join('\n'))+'</div></aside>')
+     const innerHTML=renderNormal(inner.join('\n'))
+     if(m[2]){
+       out.push('<details class="callout callout-'+kind+'"'+(m[2]==='+'?' open':'')+'><summary class="callout-title">'+esc(title)+'</summary><div class="callout-body">'+innerHTML+'</div></details>')
+     }else{
+       out.push('<aside class="callout callout-'+kind+'"><div class="callout-title">'+esc(title)+'</div><div class="callout-body">'+innerHTML+'</div></aside>')
+     }
    }
    flush()
    return DOMPurify.sanitize(out.join('\n'))
