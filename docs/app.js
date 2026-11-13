@@ -10,6 +10,7 @@ const categories = {
   internal:{label:'Internal',color:'#86bca8'}
 }
 let documents={}, playbooks=[], products=[], folders={}
+let sidebarOrder=['playbooks','products']
 
 const pathSlug = path => path.replace(/\.md$/, '')
 
@@ -29,6 +30,7 @@ async function load(){
   const r=await fetch('./manifest.json'); if(!r.ok)throw Error('manifest.json을 읽을 수 없습니다')
   const manifest=await r.json()
   playbooks=manifest.playbooks; products=manifest.products; folders=manifest.folders||{}
+  if(Array.isArray(manifest.sidebarOrder))sidebarOrder=[...new Set([...manifest.sidebarOrder.filter(key=>key==='playbooks'||key==='products'),'playbooks','products'])]
   await Promise.all([...new Set([...playbooks,...products,...Object.values(folders)])].map(async path=>{
     const res=await fetch('./'+path);if(!res.ok)throw Error(path+'를 읽을 수 없습니다')
     documents[path]={...parse(await res.text()),path}
@@ -65,12 +67,20 @@ function treeHtml(entries,prefix='',depth=0){
   }).join('')
 }
 function sidebarHtml(){
- const p=treeHtml(tree(playbooks,'playbooks/'),'playbooks/'),q=treeHtml(tree(products,'products/'),'products/')
+ const sections={
+  playbooks:{paths:playbooks,label:'Playbook'},
+  products:{paths:products,label:'Device Info'}
+ }
+ const nav=sidebarOrder.map(key=>{
+  const section=sections[key]
+  const content=expanded.has(key)?treeHtml(tree(section.paths,key+'/'),key+'/'):''
+  return '<div class="tree-section"><div class="section-row"><button data-section="'+key+'" class="section-link'+(selected===key?' selected':'')+'">'+esc(sidebarFolderLabel(key))+'</button><button class="section-toggle" data-top="'+key+'" aria-label="Toggle '+section.label+'">'+(expanded.has(key)?'⌄':'›')+'</button></div>'+content+'</div>'
+ }).join('')
  return '<aside class="sidebar" id="wiki-sidebar">'+sidebarToggleHtml()+'<a class="brand" data-section="playbooks" href="'+docUrl('playbooks')+'"><span class="brand-mark" role="img" aria-label="Magnifying glass">🔍</span> CIA</a>'+
  '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
- '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'">'+esc(sidebarFolderLabel('playbooks'))+'</button><button class="section-toggle" data-top="playbooks" aria-label="Toggle Playbook">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
- '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'">'+esc(sidebarFolderLabel('products'))+'</button><button class="section-toggle" data-top="products" aria-label="Toggle Device Info">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav></aside>'
+ '<nav class="file-tree">'+nav+'</nav></aside>'
 }
+
 function resolveLink(href,docPath){
   if(!href)return null
   if(documents[href])return href
