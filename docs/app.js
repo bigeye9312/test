@@ -19,7 +19,8 @@ let search='', graphFilter=''
 let sidebarCollapsed=false
 let graphMode='global', graphFocus=null
 let graphSettingsOpen=true
-let graphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:410, linkDistance:135, showLabels:true}
+const defaultGraphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:410, linkDistance:135, showLabels:true}
+let graphOptions={...defaultGraphOptions}
 
 const docUrl = path => path==='playbooks'||path==='products'?'?view='+path:folders[path]?'?folder='+encodeURIComponent(path):'?doc='+encodeURIComponent(path)
 function parse(raw){
@@ -135,7 +136,6 @@ function graphHtml(){
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '</div></div>'+
     '<div class="graph-canvas"></div>'+
-    (graphMode==='local'?'<div class="graph-overlay"><button data-graph-back class="graph-back" type="button">← Global</button></div>':'')+
     '<aside class="graph-settings'+(graphSettingsOpen?' is-open':'')+'" aria-label="Settings">'+
     '<div class="settings-top"><strong>Settings</strong><button type="button" data-settings-close title="Close settings" aria-label="Close settings">×</button></div>'+
     filters+groups+display+forces+'</aside>'+
@@ -214,9 +214,16 @@ function render(){
     window.mountPlaybookGraph?.($('.graph-shell'),playbooks,documents,{
       mode:graphMode,focus:graphFocus,depth:1,filter:graphFilter,
       ...graphOptions,
-      selectNode:navigateFocus,openDocument:select
+      selectNode:navigateFocus,openDocument:select,
+      resetView:()=>{
+        graphMode='global'
+        graphFocus=null
+        graphFilter=''
+        graphOptions={...defaultGraphOptions}
+        graphSettingsOpen=true
+        render()
+      }
     })
-    $('[data-graph-back]')?.addEventListener('click',()=>{graphMode='global';graphFocus=null;render()})
     $('[data-settings-toggle]')?.addEventListener('click',()=>{graphSettingsOpen=!graphSettingsOpen;$('.graph-settings')?.classList.toggle('is-open',graphSettingsOpen);$('[data-settings-toggle]')?.setAttribute('aria-expanded',String(graphSettingsOpen))})
     $('[data-settings-close]')?.addEventListener('click',()=>{graphSettingsOpen=false;$('.graph-settings')?.classList.remove('is-open');$('[data-settings-toggle]')?.setAttribute('aria-expanded','false')})
     root.querySelectorAll('[data-graph-option]').forEach(control=>control.addEventListener('change',()=>{
