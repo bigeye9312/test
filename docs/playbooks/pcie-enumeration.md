@@ -1,18 +1,9 @@
 ---
-id: pcie-enumeration
-title: PCIe 인식 확인
-description: PCIe 장치 및 Function의 인식 상태에서 분석을 시작합니다.
-category: discovery
-tags: [pcie, enumeration]
-links:
-  - to: nvme-initialization
-    type: check_when
-    label: PCIe는 보이지만 NVMe 초기화에 문제가 있으면
-  - to: pcie-error
-    type: check_when
-    label: AER 등 PCIe 오류 증거가 관측되면
+tags: [area/discovery, pcie, enumeration]
 ---
 # PCIe 인식 확인
+
+PCIe 장치 및 Function의 인식 상태에서 분석을 시작합니다.
 
 ## 먼저 확인할 것
 1. 기대한 PCIe Function이 모두 보이는가?
@@ -24,3 +15,8 @@ PCIe 인식에 관련된 관측값과 그 출처를 확인하고, 누락된 정�
 
 ## 주의
 인식되지 않는 이유를 이 단계에서 단정하지 않는다.
+
+## Related Playbooks
+
+- [[playbooks/nvme-initialization|nvme-initialization]] — PCIe는 보이지만 NVMe 초기화에 문제가 있으면
+- [[playbooks/pcie-error|pcie-error]] — AER 등 PCIe 오류 증거가 관측되면
