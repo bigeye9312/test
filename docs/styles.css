@@ -284,40 +284,6 @@ body{background:#fff;color:#27313c}
   font-size:12px;
   font-weight:550;
 }
-.graph-overlay .graph-center-label{
-  display:block;
-  max-width:100%;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  color:#d5d5d5;
-  font-size:12px;
-  font-weight:550;
-}
-.graph-depth-control{
-  position:absolute;
-  left:15px;
-  bottom:16px;
-  z-index:3;
-  display:inline-flex;
-  align-items:center;
-  gap:9px;
-  padding:6px 9px;
-  border:1px solid #454545;
-  border-radius:5px;
-  background:#282828;
-  color:#c5c5c5;
-  font-size:11px;
-}
-.graph-depth-control select{
-  padding:2px 5px;
-  border:1px solid #505050;
-  border-radius:4px;
-  background:#333;
-  color:#e1e1e1;
-  font:inherit;
-}
 @media(max-width:570px){
   .graph-overlay{left:10px;max-width:calc(100% - 90px)}
-  .graph-depth-control{left:10px;bottom:12px}
 }
