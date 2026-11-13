@@ -1,0 +1,6 @@
+---
+tags: [playbooks]
+---
+# Playbooks
+
+<!-- graph -->
