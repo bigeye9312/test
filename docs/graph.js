@@ -57,6 +57,9 @@
     const counter = panel.querySelector('.graph-node-count')
     if (counter) counter.textContent = nodes.length + ' nodes'
     const selectedId = mode === 'local' && focus ? focus.id : null
+    panel.classList.toggle('is-local', mode === 'local')
+    const focusLabel = panel.querySelector('.graph-focus-label')
+    if (focusLabel) focusLabel.textContent = selectedId ? 'LOCAL · ' + focus.title : ''
     const width = 960, height = 560
     const svg = d3.select(canvas).append('svg')
       .attr('viewBox', '0 0 ' + width + ' ' + height)
@@ -70,25 +73,39 @@
     const nodeSelection = nodeLayer.selectAll('g').data(nodes).join('g')
       .attr('class', d => 'force-node' + (d.id === selectedId ? ' is-focus' : ''))
       .attr('role', 'button').attr('tabindex', 0)
-      .attr('aria-label', d => d.title + ', select local graph; select again to open document')
+      .attr('aria-label', d => d.title + (mode === 'local' ? ', open document; Shift+Enter to explore neighbors' : ', explore local graph'))
+      .attr('cursor', 'pointer')
+    nodeSelection.append('title').text(d => d.title + (mode === 'local' ? ' · Click: open · Shift+click: explore' : ' · Click: explore'))
+    nodeSelection.filter(d => d.id === selectedId).append('circle')
+      .attr('class', 'node-focus-ring').attr('r', (Number(options.nodeSize) || 7) + 11)
     nodeSelection.append('circle').attr('class', 'node-halo').attr('r', 18)
       .attr('fill', d => palette[d.category] || palette.default)
     nodeSelection.append('circle').attr('class', 'node-core')
       .attr('r', d => (Number(options.nodeSize) || 7) + (d.id === selectedId ? 3 : 0))
       .attr('fill', d => palette[d.category] || palette.default)
+    const showLabels = options.showLabels !== false
+    if (showLabels && mode === 'local') {
+      nodeSelection.append('rect').attr('class', 'node-label-bg')
+        .attr('x', d => -Math.min(d.title.length, 30) * 3.2 - 8)
+        .attr('y', 17).attr('rx', 4).attr('height', 21)
+        .attr('width', d => Math.min(d.title.length, 30) * 6.4 + 16)
+    }
     nodeSelection.append('text').attr('class', 'node-title').attr('text-anchor', 'middle')
-      .attr('dy', 30).text(d => d.title)
-      .style('display', options.showLabels === false ? 'none' : null)
+      .attr('dy', 31).text(d => mode === 'local' && d.title.length > 30 ? d.title.slice(0, 29) + '…' : d.title)
+      .style('display', showLabels ? null : 'none')
 
     const zoom = d3.zoom().scaleExtent([.08, 4])
       .filter(e => e.type !== 'dblclick' && !e.button)
       .on('zoom', event => viewport.attr('transform', event.transform))
     svg.call(zoom).on('dblclick.zoom', null)
+    const local = mode === 'local'
+    const nodeRadius = Number(options.nodeSize) || 7
     const simulation = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(edges).id(d => d.id).distance(Number(options.linkDistance) || 60).strength(.5))
-      .force('charge', d3.forceManyBody().strength(-(Number(options.repel) || 180)))
+      .force('link', d3.forceLink(edges).id(d => d.id).distance(local ? Math.max(125, Number(options.linkDistance) || 60) : (Number(options.linkDistance) || 60)).strength(.5))
+      .force('charge', d3.forceManyBody().strength(-(local ? Math.max(330, Number(options.repel) || 180) : (Number(options.repel) || 180))))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide(d => (Number(options.nodeSize) || 7) + 9))
+      .force('collision', d3.forceCollide(d => local && showLabels
+        ? Math.max(54, Math.min(d.title.length, 30) * 3.2 + 12) : nodeRadius + 9))
       .alphaDecay(.036)
       .on('tick', () => {
         linkSelection.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
@@ -147,8 +164,8 @@
         event.subject.fy = null
       })
     nodeSelection.call(dragging)
-    const activate = node => {
-      if (mode === 'local' && selectedId === node.id) options.openDocument(node.path)
+    const activate = (node, explore = false) => {
+      if (mode === 'local' && !explore) options.openDocument(node.path)
       else options.selectNode(node.id)
     }
     nodeSelection
@@ -158,7 +175,7 @@
       .on('blur', normal)
       .on('click', (event, node) => {
         if (event.defaultPrevented || moved) return
-        activate(node)
+        activate(node, event.shiftKey)
       })
       .on('dblclick', (event, node) => {
         event.stopPropagation()
@@ -168,7 +185,7 @@
       .on('keydown', (event, node) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
-          activate(node)
+          activate(node, event.shiftKey)
         }
       })
     const resetButton = panel.querySelector('[data-graph-reset]')

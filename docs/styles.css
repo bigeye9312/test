@@ -311,3 +311,15 @@ body{background:#fff;color:#27313c}
   border:1px solid #dfe4ea;
   padding:9px 13px;
 }
+
+.graph-local-info{display:none;align-items:center;gap:12px;min-width:0;overflow:hidden}
+.graph-shell.is-local .graph-local-info{display:flex}
+.graph-focus-label{color:#e9e4f5;font-size:11px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.graph-local-hint{font-size:10px;font-weight:400;color:#a0a0a0;white-space:nowrap}
+.graph-shell.is-local .graph-head{justify-content:space-between}
+.force-node .node-focus-ring{fill:none;stroke:#f0e9ff;stroke-width:2;stroke-opacity:.95;pointer-events:none}
+.force-node.is-focus .node-halo{opacity:.42}
+.force-node.is-focus .node-title{fill:#fff;font-weight:700}
+.force-node .node-label-bg{fill:#202020;fill-opacity:.92;stroke:#45454f;stroke-width:.6;pointer-events:none}
+.force-node.is-focus .node-label-bg{fill:#393449;stroke:#ab99c6;stroke-width:1}
+@media(max-width:750px){.graph-local-hint{display:none}}
