@@ -230,11 +230,11 @@ body{background:#fff;color:#27313c}
 
 
 .shell.sidebar-collapsed{grid-template-columns:minmax(0,1fr)}
-.shell.sidebar-collapsed>.sidebar{display:none}
+.sidebar{position:relative}
 .sidebar-visibility-toggle{
-  position:fixed;
-  top:14px;
-  right:20px;
+  position:absolute;
+  top:17px;
+  right:12px;
   z-index:20;
   display:inline-flex;
   align-items:center;
@@ -250,7 +250,9 @@ body{background:#fff;color:#27313c}
 }
 .sidebar-visibility-toggle:hover{background:#f4f6fa;color:#283448;border-color:#cbd3df}
 .sidebar-visibility-toggle:focus-visible{outline:2px solid #7787bf;outline-offset:2px}
+.shell.sidebar-collapsed>.sidebar-visibility-toggle{position:fixed;top:14px;left:12px;right:auto}
 @media(max-width:570px){
   .shell.sidebar-collapsed{grid-template-rows:minmax(0,1fr)}
-  .sidebar-visibility-toggle{top:10px;right:12px}
+  .sidebar>.sidebar-visibility-toggle{top:8px;right:10px}
+  .shell.sidebar-collapsed>.sidebar-visibility-toggle{top:10px;left:12px}
 }
