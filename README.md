@@ -1,78 +1,51 @@
 # SSD Analysis Knowledge Base
 
-Markdown을 원본으로 사용하는 **Obsidian-inspired 정적 문서 뷰어** 실험 프로젝트입니다. 모든 SSD 분석 문서 및 제품값은 가상 예시입니다.
+SSD 분석을 위한 GitHub Pages 정적 Markdown 뷰어. 모든 샘플 절차와 제품값은 가상 데이터입니다.
 
-## 화면
-- **왼쪽 리본·파일 탐색기**: Playbooks / Products 디렉터리 트리 및 파일명 검색
-- **Playbooks 메인**: D3 force 기반 관계 그래프. Global → Local 탐색, 노드 드래그, 확대/축소, 연결 강조
-- **클릭 동작**: Global/Category의 노드 1회 클릭 → Local Graph. Local의 중심 노드 재클릭 → 문서. 노드 더블클릭 → 문서 바로 열기
-- **Local Graph**: 선택된 노드 기준 1-hop 또는 2-hop 인접 문서 표시 (카테고리를 넘어 연결된 문서 포함)
-- **문서 화면**: Markdown 읽기 모드, Frontmatter Properties(펼치기/접기), 클릭 가능한 태그, 관련 Playbook 링크
-- **디자인**: Obsidian 공식 인터페이스를 참고한 오리지널 다크 테마 CSS. Graph의 상단 scope control, search/zoom toolbar 및 하단 legend/status. Obsidian 자체 앱 코드/에셋은 복사하지 않았습니다.
+## UI
+- **일반 페이지:** 왼쪽 Playbooks / Products 계층형 Explorer, 오른쪽 Markdown Reading View. 문서 편집기처럼 보이지만 실제로는 읽기 전용입니다.
+- **Playbooks 메인:** Obsidian Graph View를 참고한 D3 그래프 캔버스와 우측 Filters / Groups / Display / Forces.
+- **탐색:** 전체 그래프의 노드 클릭 → Local Graph (1/2 hops), 중심 노드 재클릭 → 문서, 더블클릭 → 문서 즉시 열기.
+- **Explorer:** 검색, 폴더 열기/닫기, 문서 열기만 지원합니다. 새 탭·새 문서·닫기 등의 가짜 버튼은 없습니다.
 
-## 소스 구조
+## Markdown 지원
+- CommonMark / GFM: 제목, 목록, 표, 코드, 체크리스트
+- Obsidian YAML Properties: `tags`, `aliases` 표시. **`cssclasses`는 지원하지 않음**
+- Obsidian Callouts: `> [!NOTE]`, `> [!WARNING]` 등 기본 유형을 카드로 렌더링
+- WikiLinks: `[[playbooks/pcie-enumeration]]`, `[[playbooks/pcie-enumeration#먼저 확인할 것]]`
+- Heading Links: 문서에서 특정 제목으로 이동
+- Backlinks: 현재 문서를 WikiLink로 참조한 다른 문서를 역으로 검색해 표시
+- 태그 중 `area/*`는 그래프 색상 분류에 사용
+
+참고: Callout 임베드와 block-id, 모든 Obsidian 확장 문법의 완전한 호환까지는 보장하지 않습니다.
+
+## 파일 구조
 
 ```text
 docs/
 ├── index.html
-├── app.js              # 문서 탐색 / Markdown 뷰어
-├── graph.js            # D3 기반 물리 시뮬레이션 그래프
-├── styles.css          # 워크스페이스 UI
-├── manifest.json       # 게시할 문서 파일 경로 목록
-├── playbooks/          # 분석 관점
-└── products/           # 제품별 예제
+├── app.js           # 파일 트리 / 페이지 전환 / Backlinks
+├── markdown.js      # Callouts / Heading Links / WikiLinks
+├── graph.js         # D3 graph
+├── styles.css
+├── manifest.json
+├── playbooks/
+└── products/
 ```
 
-Quartz 관련 코드 및 GitHub Actions 워크플로는 제거했습니다. 정적 뷰어에는 npm이나 Node.js 빌드가 필요하지 않습니다. JavaScript 의존성(D3, Marked, js-yaml, DOMPurify)은 CDN에서 읽습니다.
+## 배포
 
-## GitHub Pages
+GitHub → Settings → Pages → **Deploy from a branch → main /docs**.
+사이트: https://bigeye9312.github.io/test/
 
-Settings → Pages → **Deploy from a branch → main /docs**로 설정하세요.
-- 게시 URL: https://bigeye9312.github.io/test/
-- GitHub Actions를 Pages Source로 선택하면 이 버전이 게시되지 않으므로, **Deploy from a branch**로 전환해야 합니다.
+npm, Node.js, Quartz, GitHub Actions 빌드는 사용하지 않습니다. 브라우저에서는 CDN의 js-yaml / Marked / DOMPurify / D3를 로드합니다. 로컬 실행은 `python -m http.server 8000 --directory docs`로 가능합니다.
 
-로컬 개발 서버:
+새 문서는 `docs/manifest.json`에 파일 경로를 추가해야 뷰어에서 인식합니다.
 
-```bash
-python -m http.server 8000 --directory docs
-```
+## 공식 문서
+- https://help.obsidian.md/properties
+- https://help.obsidian.md/syntax
+- https://help.obsidian.md/plugins/graph
+- https://d3js.org/d3-force
 
-브라우저에서 http://localhost:8000 접속.
-
-새 문서를 추가하면 `docs/manifest.json`에 경로도 추가해야 탐색기에 표시됩니다. 그래프는 `docs/playbooks/*.md` 본문의 Obsidian `[[WikiLink]]` 관계를 사용합니다. 그래프 연결은 Markdown 본문의 `[[WikiLink]]`로 표시하며, 그룹 색상은 기본 속성 `tags`의 `area/*` 태그로 정합니다.
-
-## 참고 자료
-- Obsidian Graph View: https://obsidian.md/help/plugins/graph
-- Obsidian CSS Variables: https://docs.obsidian.md/Reference/CSS+variables/About+styling
-- D3: https://d3js.org/what-is-d3
-- D3 Force: https://d3js.org/d3-force
-
-## 주의
-GitHub Pages는 외부 접근 가능성이 있습니다. 실제 사내 분석 문서, Dump, 임계값, 제품 정보 등은 넣지 마세요.
-
-## Graph View (Obsidian-inspired)
-
-Graph canvas occupies the editor, with a collapsible floating settings panel on the right.
-
-- **Filters**: file search and orphan visibility.
-- **Groups**: colors assigned by the existing Playbook category.
-- **Display**: node labels, node size, and link thickness.
-- **Forces**: repel force and link distance.
-- **Navigation**: Global Graph is the landing view. Click a node to open Local Graph (1/2-hop), click the focused node again to open Markdown, or use Back to Global. Group colors are derived from native `tags` entries such as `area/discovery`.
-- **Navigation**: click a node once to enter its Local graph; click the same focused node again to open the document. Double-click opens a document immediately.
-
-Controls are intentionally limited to features supported by the current playbook data. Obsidian's attachment controls and query-driven groups are not included because there is no corresponding content model yet.
-
-## Obsidian-compatible frontmatter
-
-문서의 Frontmatter에는 Obsidian 기본 속성 `tags`, `aliases`, `cssclasses`만 사용합니다. 제목은 Markdown의 `# Heading`에서 읽습니다.
-
-```yaml
----
-tags: [area/discovery, pcie, enumeration]
----
-```
-
-연결 관계는 본문의 `[[playbooks/nvme-initialization|NVMe 초기화]]` 같은 WikiLink를 사용합니다. `area/discovery`도 Obsidian이 지원하는 중첩 태그 형식이며, 웹 그래프에서는 색상 그룹으로 사용합니다.
-
-기존 커스텀 `id`, `category`, `links` 필드는 제거했습니다. UI의 Properties도 `tags`, `aliases`, `cssclasses`만 표시합니다.
+**주의:** GitHub Pages 사이트는 공개될 수 있으므로 실제 사내 SSD Dump와 기밀 분석 자료를 업로드하지 마세요.
