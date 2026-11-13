@@ -115,7 +115,7 @@ function graphHtml(){
   const checked=name=>graphOptions[name]?' checked':''
   const slider=(name,min,max,step,title)=>'<label class="settings-slider"><span>'+title+'</span><input type="range" data-graph-option="'+name+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+graphOptions[name]+'"></label>'
   const filters='<details open><summary>Filters</summary><div class="settings-group">'+
-    '<label class="settings-search"><span>⌕</span><input id="graph-search" type="search" placeholder="Search files..." value="'+esc(graphFilter)+'" aria-label="Search files"></label>'+
+    '<label class="settings-search"><span>⌕</span><input id="graph-search" type="search" placeholder="Search" value="'+esc(graphFilter)+'" aria-label="Search files"></label>'+
     '<label class="settings-toggle"><span>Orphans</span><input type="checkbox" data-graph-option="orphans"'+checked('orphans')+'><i></i></label>'+
     '</div></details>'
   const groups='<details open><summary>Groups</summary><div class="settings-group"><div class="settings-caption">Color by tags</div>'+
@@ -129,17 +129,17 @@ function graphHtml(){
     slider('repel',120,900,20,'Repel force')+slider('linkDistance',70,260,10,'Link distance')+
     '</div></details>'
   return '<div class="graph-workspace"><section class="graph-shell" aria-label="Interactive Playbook Graph">'+
-    '<div class="graph-head"><span class="graph-head-name">Graph view</span><div class="graph-head-actions">'+
-    '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Graph settings" aria-label="Graph settings">☷</button>'+
+    '<div class="graph-head"><div class="graph-head-actions">'+
+    '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '<button class="graph-toolbar-button" data-graph-reset title="Reset view" aria-label="Reset view">⟲</button>'+
     '</div></div>'+
     '<div class="graph-canvas"></div>'+
     (graphMode==='local'?'<div class="graph-overlay"><div class="graph-context-tools"><button data-graph-back class="graph-back" type="button">‹ &nbsp; Global graph</button><span class="graph-center-label">'+esc(focusTitle)+'</span><label class="graph-control-label">Depth <select id="graph-depth"><option value="1"'+(graphDepth===1?' selected':'')+'>1</option><option value="2"'+(graphDepth===2?' selected':'')+'>2</option></select></label></div></div>':'')+
-    '<aside class="graph-settings'+(graphSettingsOpen?' is-open':'')+'" aria-label="Graph settings">'+
-    '<div class="settings-top"><strong>Graph settings</strong><button type="button" data-settings-close title="Close settings" aria-label="Close settings">×</button></div>'+
+    '<aside class="graph-settings'+(graphSettingsOpen?' is-open':'')+'" aria-label="Settings">'+
+    '<div class="settings-top"><strong>Settings</strong><button type="button" data-settings-close title="Close settings" aria-label="Close settings">×</button></div>'+
     filters+groups+display+forces+'</aside>'+
-    '<div class="graph-canvas-controls"><button data-zoom-in title="Zoom in" aria-label="Zoom in">+</button><button data-zoom-out title="Zoom out" aria-label="Zoom out">−</button></div>'+
-    '<div class="graph-bottom"><span class="graph-info">Select a node to explore locally</span><span class="graph-help">Click: local · Click again: document · Scroll: zoom</span></div>'+
+    '<div class="graph-canvas-controls"><button data-zoom-in title="Zoom in" aria-label="Zoom in">+</button><button data-zoom-out title="Zoom out" aria-label="Zoom out">−</button><span class="graph-node-count" aria-live="polite">0 nodes</span></div>'+
+    
     '</section></div>'
 }
 function productOverview(){
@@ -173,7 +173,7 @@ function select(path,heading=''){
 }
 function render(){
   window.disposePlaybookGraph?.()
-  root.innerHTML='<div class="shell">'+sidebarHtml()+'<main class="main"><div class="page-top"><span>'+esc(selected==='playbooks'?'Graph view':selected==='products'?'Products':label(selected))+'</span><a href="https://github.com/bigeye9312/test" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div>'+
+  root.innerHTML='<div class="shell">'+sidebarHtml()+'<main class="main"><div class="page-top"><span>'+esc(selected==='playbooks'?'Playbooks':selected==='products'?'Products':label(selected))+'</span><a href="https://github.com/bigeye9312/test" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div>'+
  '<div class="page-content'+(selected==='playbooks'?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
   root.querySelectorAll('[data-doc]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.doc,node.dataset.heading||'')}))
   root.querySelectorAll('[data-section]').forEach(node=>node.addEventListener('click',()=>select(node.dataset.section)))
