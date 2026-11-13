@@ -18,6 +18,9 @@ let documents={}, playbooks=[], products=[]
 let selected='playbooks', expanded=new Set(['playbooks','products'])
 let search='', mode='files', showProperties=true, graphFilter=''
 let graphMode='global', graphCategory='discovery', graphFocus=null, graphDepth=1
+let graphSettingsOpen=false
+let graphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:410, linkDistance:135, showLabels:true}
+
 const docUrl = path => path==='playbooks'||path==='products'?'?view='+path:'?doc='+encodeURIComponent(path)
 function parse(raw){
   const match=raw.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n/)
@@ -104,25 +107,43 @@ function propertyHtml(doc){
 }
 function graphHtml(){
   const current=playbooks.find(path=>documents[path].meta.id===graphFocus)
-  const focusTitle=current?label(current):'No selection'
+  const focusTitle=current?label(current):'Select a node'
   const categoryOptions=Object.entries(categories)
     .map(([id,value])=>'<option value="'+esc(id)+'"'+(graphCategory===id?' selected':'')+'>'+esc(value.label)+'</option>').join('')
-  const isLocal=graphMode==='local'
-  const locationText=isLocal?'Playbooks / '+esc(focusTitle):graphMode==='category'?'Playbooks / '+esc(categories[graphCategory]?.label||graphCategory):'Playbooks'
-  return '<div class="graph-workspace"><section class="graph-shell" aria-label="Playbook relationship graph">'+
-    '<div class="graph-head"><div class="graph-head-left"><span class="graph-head-name">Graph view</span><span class="graph-head-separator">/</span><span class="graph-crumb">'+locationText+'</span></div>'+
-    '<div class="graph-head-actions"><div class="graph-modes" role="group" aria-label="Graph scope">'+
-      ['global','category','local'].map(value=>'<button type="button" data-graph-mode="'+value+'" class="'+(graphMode===value?'active':'')+'" '+(value==='local'&&!graphFocus?'disabled title="Select a node first"':'')+'>'+value[0].toUpperCase()+value.slice(1)+'</button>').join('')+'</div>'+
-    '<button type="button" class="graph-toolbar-button" data-graph-reset title="Reset zoom" aria-label="Reset zoom">⟲</button></div></div>'+
-    '<div class="graph-subbar"><div class="graph-subbar-left">'+
-      (graphMode==='category'?'<label class="graph-control-label">Category <select id="graph-category">'+categoryOptions+'</select></label>':'')+
-      (isLocal?'<button type="button" class="graph-back" data-graph-back>‹ &nbsp; Back to Global</button><span class="graph-center-label">'+esc(focusTitle)+'</span><label class="graph-control-label">Depth <select id="graph-depth"><option value="1"'+(graphDepth===1?' selected':'')+'>1 hop</option><option value="2"'+(graphDepth===2?' selected':'')+'>2 hops</option></select></label>':'')+
-      (graphMode==='global'?'<span class="graph-context-label">All playbooks</span>':'')+
-    '</div><div class="graph-subbar-right"><label class="graph-find"><span>⌕</span><input id="graph-search" type="search" value="'+esc(graphFilter)+'" placeholder="Find nodes" aria-label="Find nodes"></label>'+
-    '<button class="graph-zoom" type="button" data-zoom-out title="Zoom out" aria-label="Zoom out">−</button><button class="graph-zoom" type="button" data-zoom-in title="Zoom in" aria-label="Zoom in">＋</button></div></div>'+
+  const checked=name=>graphOptions[name]?' checked':''
+  const slider=(name,min,max,step,title)=>'<label class="settings-slider"><span>'+title+'</span><input type="range" data-graph-option="'+name+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+graphOptions[name]+'"></label>'
+  const filters='<details open><summary>Filters</summary><div class="settings-group">'+
+    '<label class="settings-search"><span>⌕</span><input id="graph-search" type="search" placeholder="Search files..." value="'+esc(graphFilter)+'" aria-label="Search files"></label>'+
+    '<label class="settings-toggle"><span>Orphans</span><input type="checkbox" data-graph-option="orphans"'+checked('orphans')+'><i></i></label>'+
+    '</div></details>'
+  const groups='<details open><summary>Groups</summary><div class="settings-group"><div class="settings-caption">Color by category</div>'+
+    Object.entries(categories).map(([key,val])=>'<div class="settings-group-row"><span>'+esc(val.label)+'</span><i class="settings-color" style="background:'+val.color+'"></i></div>').join('')+
+    '</div></details>'
+  const display='<details><summary>Display</summary><div class="settings-group">'+
+    '<label class="settings-toggle"><span>Text labels</span><input type="checkbox" data-graph-option="showLabels"'+checked('showLabels')+'><i></i></label>'+
+    slider('nodeSize',3,14,1,'Node size')+slider('linkThickness',0.4,3,0.2,'Link thickness')+
+    '</div></details>'
+  const forces='<details><summary>Forces</summary><div class="settings-group">'+
+    slider('repel',120,900,20,'Repel force')+slider('linkDistance',70,260,10,'Link distance')+
+    '</div></details>'
+  return '<div class="graph-workspace"><section class="graph-shell" aria-label="Interactive Playbook Graph">'+
+    '<div class="graph-head"><span class="graph-head-name">Graph view</span><div class="graph-head-actions">'+
+    '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Graph settings" aria-label="Graph settings">☷</button>'+
+    '<button class="graph-toolbar-button" data-graph-reset title="Reset view" aria-label="Reset view">⟲</button>'+
+    '</div></div>'+
     '<div class="graph-canvas"></div>'+
-    '<div class="graph-bottom"><div class="graph-status"><span class="graph-info">Select a node to explore locally</span></div><div class="graph-legend">'+Object.entries(categories).map(([key,val])=>'<span><i class="dot '+key+'"></i>'+esc(val.label)+'</span>').join('')+'</div></div>'+
-    '</section><div class="graph-footnote">Click a node to focus its local network. Click the focused node again or double-click any node to open its document. Drag to pan · Scroll to zoom.</div></div>'
+    '<div class="graph-overlay"><div class="graph-modes" role="group" aria-label="Graph scope">'+
+    ['global','category','local'].map(value=>'<button type="button" data-graph-mode="'+value+'" class="'+(graphMode===value?'active':'')+'" '+(value==='local'&&!graphFocus?'disabled title="Select a node first"':'')+'>'+value[0].toUpperCase()+value.slice(1)+'</button>').join('')+
+    '</div><div class="graph-context-tools">'+
+    (graphMode==='category'?'<label class="graph-control-label">Group <select id="graph-category">'+categoryOptions+'</select></label>':'')+
+    (graphMode==='local'?'<button data-graph-back class="graph-back" type="button">‹ &nbsp; Global</button><span class="graph-center-label">'+esc(focusTitle)+'</span><label class="graph-control-label">Depth <select id="graph-depth"><option value="1"'+(graphDepth===1?' selected':'')+'>1</option><option value="2"'+(graphDepth===2?' selected':'')+'>2</option></select></label>':'')+
+    '</div></div>'+
+    '<aside class="graph-settings'+(graphSettingsOpen?' is-open':'')+'" aria-label="Graph settings">'+
+    '<div class="settings-top"><strong>Graph settings</strong><button type="button" data-settings-close title="Close settings" aria-label="Close settings">×</button></div>'+
+    filters+groups+display+forces+'</aside>'+
+    '<div class="graph-canvas-controls"><button data-zoom-in title="Zoom in" aria-label="Zoom in">+</button><button data-zoom-out title="Zoom out" aria-label="Zoom out">−</button></div>'+
+    '<div class="graph-bottom"><span class="graph-info">Select a node to explore locally</span><span class="graph-help">Click: local · Click again: document · Scroll: zoom</span></div>'+
+    '</section></div>'
 }
 function productOverview(){
   return '<div class="article-wrap"><div class="eyebrow">DOCUMENTATION / PRODUCTS</div><h1 class="document-title">Products</h1><p class="doc-description">제품별 기준과 예외를 기록하는 문서입니다.</p><div class="product-list">'+products.map(path=>'<a data-doc="'+esc(path)+'" href="'+docUrl(path)+'"><span class="doc-icon">▧</span><span><strong>'+esc(label(path))+'</strong><small>'+esc(path)+'</small></span><span class="chevron">↗</span></a>').join('')+'</div></div>'
@@ -178,6 +199,7 @@ function render(){
     }
     window.mountPlaybookGraph?.($('.graph-shell'),playbooks,documents,{
       mode:graphMode,category:graphCategory,focus:graphFocus,depth:graphDepth,filter:graphFilter,
+      ...graphOptions,
       selectNode:navigateFocus,openDocument:select
     })
     root.querySelectorAll('[data-graph-mode]').forEach(button=>button.addEventListener('click',()=>{
@@ -186,6 +208,13 @@ function render(){
       render()
     }))
     $('[data-graph-back]')?.addEventListener('click',()=>{graphMode='global';graphFocus=null;render()})
+    $('[data-settings-toggle]')?.addEventListener('click',()=>{graphSettingsOpen=!graphSettingsOpen;$('.graph-settings')?.classList.toggle('is-open',graphSettingsOpen);$('[data-settings-toggle]')?.setAttribute('aria-expanded',String(graphSettingsOpen))})
+    $('[data-settings-close]')?.addEventListener('click',()=>{graphSettingsOpen=false;$('.graph-settings')?.classList.remove('is-open');$('[data-settings-toggle]')?.setAttribute('aria-expanded','false')})
+    root.querySelectorAll('[data-graph-option]').forEach(control=>control.addEventListener('change',()=>{
+      const name=control.dataset.graphOption
+      graphOptions[name]=control.type==='checkbox'?control.checked:Number(control.value)
+      render()
+    }))
     $('#graph-category')?.addEventListener('change',e=>{graphCategory=e.target.value;render()})
     $('#graph-depth')?.addEventListener('change',e=>{graphDepth=Number(e.target.value);render()})
     $('#graph-search')?.addEventListener('change',e=>{graphFilter=e.target.value;render()})
