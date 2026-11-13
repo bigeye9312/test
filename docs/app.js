@@ -17,7 +17,7 @@ const pathSlug = path => path.replace(/\.md$/, '')
 let selected='playbooks', expanded=new Set(['playbooks','products'])
 let search='', graphFilter=''
 let sidebarCollapsed=false
-let graphMode='global', graphFocus=null, graphDepth=1
+let graphMode='global', graphFocus=null
 let graphSettingsOpen=true
 let graphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:410, linkDistance:135, showLabels:true}
 
@@ -114,8 +114,6 @@ function pageMetadata(doc){
    '</footer>'
 }
 function graphHtml(){
-  const current=playbooks.find(path=>pathSlug(path)===graphFocus)
-  const focusTitle=current?label(current):'Select a node'
   const checked=name=>graphOptions[name]?' checked':''
   const slider=(name,min,max,step,title)=>'<label class="settings-slider"><span>'+title+'</span><input type="range" data-graph-option="'+name+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+graphOptions[name]+'"></label>'
   const filters='<details open><summary>Filters</summary><div class="settings-group">'+
@@ -137,7 +135,7 @@ function graphHtml(){
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '</div></div>'+
     '<div class="graph-canvas"></div>'+
-    (graphMode==='local'?'<div class="graph-overlay"><button data-graph-back class="graph-back" type="button">← Global</button><span class="graph-center-label" title="'+esc(focusTitle)+'">'+esc(focusTitle)+'</span></div><label class="graph-depth-control">Depth <select id="graph-depth" aria-label="Local graph depth"><option value="1"'+(graphDepth===1?' selected':'')+'>1</option><option value="2"'+(graphDepth===2?' selected':'')+'>2</option></select></label>':'')+
+    (graphMode==='local'?'<div class="graph-overlay"><button data-graph-back class="graph-back" type="button">← Global</button></div>':'')+
     '<aside class="graph-settings'+(graphSettingsOpen?' is-open':'')+'" aria-label="Settings">'+
     '<div class="settings-top"><strong>Settings</strong><button type="button" data-settings-close title="Close settings" aria-label="Close settings">×</button></div>'+
     filters+groups+display+forces+'</aside>'+
@@ -214,7 +212,7 @@ function render(){
       render()
     }
     window.mountPlaybookGraph?.($('.graph-shell'),playbooks,documents,{
-      mode:graphMode,focus:graphFocus,depth:graphDepth,filter:graphFilter,
+      mode:graphMode,focus:graphFocus,depth:1,filter:graphFilter,
       ...graphOptions,
       selectNode:navigateFocus,openDocument:select
     })
@@ -226,7 +224,6 @@ function render(){
       graphOptions[name]=control.type==='checkbox'?control.checked:Number(control.value)
       render()
     }))
-    $('#graph-depth')?.addEventListener('change',e=>{graphDepth=Number(e.target.value);render()})
     $('#graph-search')?.addEventListener('change',e=>{graphFilter=e.target.value;render()})
     $('#graph-search')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();graphFilter=e.target.value;render()}})
   }
