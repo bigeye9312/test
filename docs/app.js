@@ -17,6 +17,7 @@ const categories = {
 let documents={}, playbooks=[], products=[]
 let selected='playbooks', expanded=new Set(['playbooks','products'])
 let search='', mode='files', showProperties=true, graphFilter=''
+let graphMode='global', graphCategory='discovery', graphFocus=null, graphDepth=1
 const docUrl = path => path==='playbooks'||path==='products'?'?view='+path:'?doc='+encodeURIComponent(path)
 function parse(raw){
   const match=raw.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n/)
@@ -63,7 +64,7 @@ function sidebarHtml(){
   const q=treeHtml(tree(products,'products/'))
   return '<aside class="sidebar"><div class="sidebar-heading"><span>EXPLORER</span><span class="ghost">···</span></div>'+
     '<div class="vault-title"><span class="vault-symbol">◆</span> SSD Analysis <span class="vault-caret">⌄</span></div>'+
-    '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="파일 이름 검색" aria-label="파일 검색" value="'+esc(search)+'"><span class="shortcut">⌕</span></div>'+
+    '<div class="sidebar-search"><span>⌕</span><input id="sidebar-search" type="search" placeholder="Find files" aria-label="Find files" value="'+esc(search)+'"><span class="shortcut">⌕</span></div>'+
     '<nav class="file-tree"><div class="tree-section"><div class="section-row"><button data-section="playbooks" class="section-link'+(selected==='playbooks'?' selected':'')+'"><span>◇</span> Playbooks</button><button class="section-toggle" data-top="playbooks" aria-label="Playbooks 펼치기">'+(expanded.has('playbooks')?'⌄':'›')+'</button></div>'+(expanded.has('playbooks')?p:'')+'</div>'+
     '<div class="tree-section"><div class="section-row"><button data-section="products" class="section-link'+(selected==='products'?' selected':'')+'"><span>▤</span> Products</button><button class="section-toggle" data-top="products" aria-label="Products 펼치기">'+(expanded.has('products')?'⌄':'›')+'</button></div>'+(expanded.has('products')?q:'')+'</div></nav>'+
     '<div class="sidebar-foot"><span>●</span> Knowledge vault <span class="muted">· Demo</span></div></aside>'
@@ -102,9 +103,26 @@ function propertyHtml(doc){
   '</div>':'')+'</div>'
 }
 function graphHtml(){
-  return '<div class="workspace-heading"><div class="view-heading"><span class="eyebrow">KNOWLEDGE GRAPH</span><h1>Playbooks</h1><p>분석 관점 간의 연결을 탐색합니다.</p></div></div>'+
-    '<section class="graph-shell"><div class="graph-head"><span class="graph-head-name">◇ &nbsp;Graph view</span><div class="graph-head-actions"><input id="graph-search" type="search" value="'+esc(graphFilter)+'" placeholder="Filter nodes…" aria-label="그래프 노드 필터"><button class="icon-btn" type="button" data-graph-reset title="그래프 초기화">⟲</button></div></div><div class="graph-canvas"></div><div class="graph-bottom"><span class="graph-info">노드를 선택하면 문서가 열립니다 · 드래그 이동 · 휠 확대</span><div class="graph-legend"><span><i class="dot discovery"></i> Discovery</span><span><i class="dot runtime"></i> Runtime</span><span><i class="dot error"></i> Error</span><span><i class="dot performance"></i> Performance</span><span><i class="dot internal"></i> Internal</span></div></div></section>'+
-    '<div class="graph-footnote">선은 Frontmatter의 <code>links</code>에서 생성됩니다. 관련성과 분석 순서는 별개입니다.</div>'
+  const current=playbooks.find(path=>documents[path].meta.id===graphFocus)
+  const focusTitle=current?label(current):'No selection'
+  const categoryOptions=Object.entries(categories)
+    .map(([id,value])=>'<option value="'+esc(id)+'"'+(graphCategory===id?' selected':'')+'>'+esc(value.label)+'</option>').join('')
+  const isLocal=graphMode==='local'
+  const locationText=isLocal?'Playbooks / '+esc(focusTitle):graphMode==='category'?'Playbooks / '+esc(categories[graphCategory]?.label||graphCategory):'Playbooks'
+  return '<div class="graph-workspace"><section class="graph-shell" aria-label="Playbook relationship graph">'+
+    '<div class="graph-head"><div class="graph-head-left"><span class="graph-head-name">Graph view</span><span class="graph-head-separator">/</span><span class="graph-crumb">'+locationText+'</span></div>'+
+    '<div class="graph-head-actions"><div class="graph-modes" role="group" aria-label="Graph scope">'+
+      ['global','category','local'].map(value=>'<button type="button" data-graph-mode="'+value+'" class="'+(graphMode===value?'active':'')+'" '+(value==='local'&&!graphFocus?'disabled title="Select a node first"':'')+'>'+value[0].toUpperCase()+value.slice(1)+'</button>').join('')+'</div>'+
+    '<button type="button" class="graph-toolbar-button" data-graph-reset title="Reset zoom" aria-label="Reset zoom">⟲</button></div></div>'+
+    '<div class="graph-subbar"><div class="graph-subbar-left">'+
+      (graphMode==='category'?'<label class="graph-control-label">Category <select id="graph-category">'+categoryOptions+'</select></label>':'')+
+      (isLocal?'<button type="button" class="graph-back" data-graph-back>‹ &nbsp; Back to Global</button><span class="graph-center-label">'+esc(focusTitle)+'</span><label class="graph-control-label">Depth <select id="graph-depth"><option value="1"'+(graphDepth===1?' selected':'')+'>1 hop</option><option value="2"'+(graphDepth===2?' selected':'')+'>2 hops</option></select></label>':'')+
+      (graphMode==='global'?'<span class="graph-context-label">All playbooks</span>':'')+
+    '</div><div class="graph-subbar-right"><label class="graph-find"><span>⌕</span><input id="graph-search" type="search" value="'+esc(graphFilter)+'" placeholder="Find nodes" aria-label="Find nodes"></label>'+
+    '<button class="graph-zoom" type="button" data-zoom-out title="Zoom out" aria-label="Zoom out">−</button><button class="graph-zoom" type="button" data-zoom-in title="Zoom in" aria-label="Zoom in">＋</button></div></div>'+
+    '<div class="graph-canvas"></div>'+
+    '<div class="graph-bottom"><div class="graph-status"><span class="graph-info">Select a node to explore locally</span></div><div class="graph-legend">'+Object.entries(categories).map(([key,val])=>'<span><i class="dot '+key+'"></i>'+esc(val.label)+'</span>').join('')+'</div></div>'+
+    '</section><div class="graph-footnote">Click a node to focus its local network. Click the focused node again or double-click any node to open its document. Drag to pan · Scroll to zoom.</div></div>'
 }
 function productOverview(){
   return '<div class="article-wrap"><div class="eyebrow">DOCUMENTATION / PRODUCTS</div><h1 class="document-title">Products</h1><p class="doc-description">제품별 기준과 예외를 기록하는 문서입니다.</p><div class="product-list">'+products.map(path=>'<a data-doc="'+esc(path)+'" href="'+docUrl(path)+'"><span class="doc-icon">▧</span><span><strong>'+esc(label(path))+'</strong><small>'+esc(path)+'</small></span><span class="chevron">↗</span></a>').join('')+'</div></div>'
@@ -123,6 +141,7 @@ function mainHtml(){
   return selected==='playbooks'?graphHtml():selected==='products'?productOverview():articleHtml(documents[selected])
 }
 function select(path){
+  if(path==='playbooks'){graphMode='global';graphFocus=null}
   if(path!=='playbooks'&&path!=='products'&&!documents[path])return
   selected=path
   history.pushState({},'',docUrl(path))
@@ -135,7 +154,7 @@ function render(){
   sidebarHtml()+
   '<div class="editor"><div class="tab-bar"><div class="tab active"><span class="tab-icon">'+(selected==='playbooks'?'◇':'▧')+'</span><span>'+esc(selected==='playbooks'?'Graph view':selected==='products'?'Products':label(selected))+'</span><span class="tab-close">×</span></div><button class="tab-plus" title="Playbooks 그래프" data-section="playbooks">＋</button></div>'+
   '<div class="editor-toolbar"><div class="toolbar-path">SSD Analysis &nbsp; / &nbsp; '+esc(selected==='playbooks'?'Playbooks':selected==='products'?'Products':selected)+'</div><div class="toolbar-actions"><button class="toolbar-icon" title="Playbooks 그래프" data-section="playbooks">◇</button><a class="toolbar-icon" title="GitHub" href="https://github.com/bigeye9312/test" target="_blank" rel="noopener noreferrer">···</a></div></div>'+
-  '<main class="editor-content">'+mainHtml()+'</main><div class="status-bar"><span>SSD Analysis Knowledge Base</span><span>Markdown &nbsp; · &nbsp; '+(selected==='playbooks'?'Graph view':selected==='products'?'Index':'Reading view')+'</span></div></div></div>'
+  '<main class="editor-content'+(selected==='playbooks'?' is-graph':'')+'">'+mainHtml()+'</main><div class="status-bar"><span>SSD Analysis Knowledge Base</span><span>Markdown &nbsp; · &nbsp; '+(selected==='playbooks'?'Graph · '+graphMode[0].toUpperCase()+graphMode.slice(1):selected==='products'?'Index':'Reading view')+'</span></div></div></div>'
   root.querySelectorAll('[data-doc]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.doc)}))
   root.querySelectorAll('[data-section]').forEach(node=>node.addEventListener('click',()=>select(node.dataset.section)))
   root.querySelectorAll('[data-top]').forEach(node=>node.addEventListener('click',()=>{
@@ -152,9 +171,25 @@ function render(){
   root.querySelectorAll('[data-properties]').forEach(node=>node.addEventListener('click',()=>{showProperties=!showProperties;render()}))
   root.querySelectorAll('[data-tag]').forEach(node=>node.addEventListener('click',()=>{search=node.dataset.tag;render();$('#sidebar-search')?.focus()}))
   if(selected==='playbooks'){
-    window.mountPlaybookGraph?.($('.graph-shell'),playbooks,documents,select)
-    $('#graph-search')?.addEventListener('input',e=>{graphFilter=e.target.value;window.filterPlaybookGraph?.(graphFilter)})
-    window.filterPlaybookGraph?.(graphFilter)
+    const navigateFocus=id=>{
+      graphFocus=id
+      graphMode='local'
+      render()
+    }
+    window.mountPlaybookGraph?.($('.graph-shell'),playbooks,documents,{
+      mode:graphMode,category:graphCategory,focus:graphFocus,depth:graphDepth,filter:graphFilter,
+      selectNode:navigateFocus,openDocument:select
+    })
+    root.querySelectorAll('[data-graph-mode]').forEach(button=>button.addEventListener('click',()=>{
+      if(button.dataset.graphMode==='local'&&!graphFocus)return
+      graphMode=button.dataset.graphMode
+      render()
+    }))
+    $('[data-graph-back]')?.addEventListener('click',()=>{graphMode='global';graphFocus=null;render()})
+    $('#graph-category')?.addEventListener('change',e=>{graphCategory=e.target.value;render()})
+    $('#graph-depth')?.addEventListener('change',e=>{graphDepth=Number(e.target.value);render()})
+    $('#graph-search')?.addEventListener('change',e=>{graphFilter=e.target.value;render()})
+    $('#graph-search')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();graphFilter=e.target.value;render()}})
   }
 }
 window.addEventListener('popstate',()=>{
