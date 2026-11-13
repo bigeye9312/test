@@ -49,3 +49,16 @@ python -m http.server 8000 --directory docs
 
 ## 주의
 GitHub Pages는 외부 접근 가능성이 있습니다. 실제 사내 분석 문서, Dump, 임계값, 제품 정보 등은 넣지 마세요.
+
+## Graph View (Obsidian-inspired)
+
+Graph canvas occupies the editor, with a collapsible floating settings panel on the right.
+
+- **Filters**: file search and orphan visibility.
+- **Groups**: colors assigned by the existing Playbook category.
+- **Display**: node labels, node size, and link thickness.
+- **Forces**: repel force and link distance.
+- **Scope**: Global / Category / Local; Local includes optional 1- or 2-hop neighborhood.
+- **Navigation**: click a node once to enter its Local graph; click the same focused node again to open the document. Double-click opens a document immediately.
+
+Controls are intentionally limited to features supported by the current playbook data. Obsidian's attachment controls and query-driven groups are not included because there is no corresponding content model yet.
