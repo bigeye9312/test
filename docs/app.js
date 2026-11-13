@@ -129,10 +129,10 @@ function graphHtml(){
     slider('repel',120,900,20,'Repel force')+slider('linkDistance',70,260,10,'Link distance')+
     '</div></details>'
   return '<div class="graph-workspace">'+breadcrumb('playbooks')+'<section class="graph-shell" aria-label="Interactive Playbook Graph">'+
-    '<div class="graph-head"><div class="graph-head-actions">'+
+    '<div class="graph-floating-tools">'+
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '<button class="graph-toolbar-button" data-graph-reset title="Reset view" aria-label="Reset view">⟲</button>'+
-    '</div></div>'+
+    '</div>'+
     '<div class="graph-canvas"></div>'+
     (graphMode==='local'?'<div class="graph-overlay"><div class="graph-context-tools"><button data-graph-back class="graph-back" type="button">‹ &nbsp; Global graph</button><span class="graph-center-label">'+esc(focusTitle)+'</span><label class="graph-control-label">Depth <select id="graph-depth"><option value="1"'+(graphDepth===1?' selected':'')+'>1</option><option value="2"'+(graphDepth===2?' selected':'')+'>2</option></select></label></div></div>':'')+
     '<aside class="graph-settings'+(graphSettingsOpen?' is-open':'')+'" aria-label="Settings">'+
