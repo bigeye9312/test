@@ -12,7 +12,7 @@ const categories = {
 let documents={}, pages=[], playbooks=[], folders={}
 let sidebarOrder=[]
 
-let selected='playbook', expanded=new Set(['playbook','device-info'])
+let selected='home', expanded=new Set(['playbook','device-info'])
 let search='', graphFilter=''
 let sidebarCollapsed=false
 let graphMode='global', graphFocus=null
@@ -20,7 +20,7 @@ let graphSettingsOpen=false
 const defaultGraphOptions={orphans:true, nodeSize:7, linkThickness:1, repel:180, linkDistance:60, showLabels:true}
 let graphOptions={...defaultGraphOptions}
 
-const docUrl = path => folders[path]&&!path.includes('/')?'?view='+encodeURIComponent(path):folders[path]?'?folder='+encodeURIComponent(path):'?doc='+encodeURIComponent(path)
+const docUrl = path => path==='home'?'?view=home':folders[path]&&!path.includes('/')?'?view='+encodeURIComponent(path):folders[path]?'?folder='+encodeURIComponent(path):'?doc='+encodeURIComponent(path)
 function parse(raw){
   const match=raw.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n/)
   return match?{meta:yaml.load(match[1])||{},body:raw.slice(match[0].length)}:{meta:{},body:raw}
@@ -44,9 +44,9 @@ async function load(){
 function selectedFromParams(params){
  const remap=value=>String(value||'').replace(/^playbooks(?=\/|$)/,'playbook').replace(/^products(?=\/|$)/,'device-info')
  const doc=remap(params.get('doc')),folder=remap(params.get('folder')),view=remap(params.get('view'))
- return documents[doc]?doc:folders[folder]?folder:folders[view]?view:'playbook'
+ return documents[doc]?doc:folders[folder]?folder:folders[view]?view:'home'
 }
-function label(path){return documents[folders[path]||path]?.body.match(/^#\s+(.+)$/m)?.[1]?.trim()||path.split('/').pop().replace(/\.md$/,'')}
+function label(path){return path==='home'?'Home':documents[folders[path]||path]?.body.match(/^#\s+(.+)$/m)?.[1]?.trim()||path.split('/').pop().replace(/\.md$/,'')}
 const sidebarFolderLabel = path => label(path).replace(/[-_]+/g,' ').replace(/\b[a-z]/g,letter=>letter.toUpperCase())
 function tree(paths,prefix){
   const map={}
@@ -78,7 +78,7 @@ function sidebarHtml(){
   const content=(search||expanded.has(key))?treeHtml(tree(sectionPaths,key+'/'),key+'/'):''
   return '<div class="tree-section"><div class="section-row"><button data-section="'+esc(key)+'" class="section-link'+(selected===key?' selected':'')+'">'+esc(sidebarFolderLabel(key))+'</button><button class="section-toggle" data-top="'+esc(key)+'" aria-label="Toggle '+esc(sidebarFolderLabel(key))+'">'+((search||expanded.has(key))?'⌄':'›')+'</button></div>'+content+'</div>'
  }).join('')
- return '<aside class="sidebar" id="wiki-sidebar">'+sidebarToggleHtml()+'<a class="brand" data-section="playbook" href="'+docUrl('playbook')+'"><span class="brand-mark" role="img" aria-label="Government building">🏛️</span> CIA</a>'+
+ return '<aside class="sidebar" id="wiki-sidebar">'+sidebarToggleHtml()+'<a class="brand" data-section="home" href="'+docUrl('home')+'"><span class="brand-mark" role="img" aria-label="Government building">🏛️</span> CIA</a>'+
  '<div class="sidebar-search"><span class="search-icon" aria-hidden="true">⌕</span><input id="sidebar-search" type="search" placeholder="Search" aria-label="Search files" value="'+esc(search)+'"></div>'+
  '<nav class="file-tree">'+nav+'</nav></aside>'
 }
@@ -115,7 +115,9 @@ function pageMetadata(doc){
    (incoming.length?'<div class="metadata-row"><span class="metadata-icon" title="Backlinks" aria-label="Backlinks"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><div class="metadata-items">'+backlinks+'</div></div>':'')+
    '</footer>'
 }
-function graphHtml(){
+const graphViews=new Set(['home','playbook','device-info'])
+const graphPaths=view=>view==='home'?[...new Set([...pages,...Object.values(folders)])]:view==='playbook'?playbooks:[...new Set([...pages.filter(path=>path.startsWith('device-info/')),...Object.entries(folders).filter(([key])=>key==='device-info'||key.startsWith('device-info/')).map(([,path])=>path)])]
+function graphHtml(view){
   const checked=name=>graphOptions[name]?' checked':''
   const slider=(name,min,max,step,title)=>'<label class="settings-slider"><span>'+title+'</span><input type="range" data-graph-option="'+name+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+graphOptions[name]+'"></label>'
   const filters='<details open><summary>Filters</summary><div class="settings-group">'+
@@ -132,7 +134,7 @@ function graphHtml(){
   const forces='<details><summary>Forces</summary><div class="settings-group">'+
     slider('repel',80,900,20,'Repel force')+slider('linkDistance',30,260,10,'Link distance')+
     '</div></details>'
-  return '<div class="graph-workspace">'+breadcrumb('playbook')+'<h1 class="graph-page-title">'+esc(label('playbook'))+'</h1><section class="graph-shell" aria-label="Interactive Playbook Graph">'+
+  return '<div class="graph-workspace">'+(view==='home'?'<nav class="breadcrumbs" aria-label="Breadcrumb"><span aria-current="page">Home</span></nav>':breadcrumb(view))+'<h1 class="graph-page-title">'+esc(sidebarFolderLabel(view))+'</h1><section class="graph-shell" aria-label="Interactive Document Graph">'+
     '<div class="graph-head"><div class="graph-head-actions">'+
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '</div></div>'+
@@ -143,7 +145,7 @@ function graphHtml(){
     filters+groups+display+forces+'</aside>'+
     '<div class="graph-canvas-controls"><button data-zoom-in title="Zoom in" aria-label="Zoom in">+</button><button data-zoom-out title="Zoom out" aria-label="Zoom out">−</button><button data-graph-reset title="Reset view" aria-label="Reset view">⟲</button><span class="graph-node-count" aria-live="polite">0 nodes</span></div>'+
     
-    '</section>'+pageMetadata(documents[folders.playbook])+'</div>'
+    '</section>'+(view==='home'?'':pageMetadata(documents[folders[view]]))+'</div>'
 }
 function breadcrumb(path){
  const parts=path.split('/')
@@ -160,7 +162,7 @@ function breadcrumb(path){
 function folderHtml(folder){
  const doc=documents[folders[folder]]
  if(!doc)return ''
- if(folder==='playbook')return graphHtml()
+ if(graphViews.has(folder))return graphHtml(folder)
  const subfolders=Object.keys(folders).filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
  const files=pages.filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
  const children=[...subfolders.map(path=>({path,folder:true})),...files.map(path=>({path,folder:false}))]
@@ -174,11 +176,11 @@ function articleHtml(doc){
  '<article class="markdown">'+markdownHtml(doc)+'</article>'+pageMetadata(doc)+'</div>'
 }
 function mainHtml(){
-  return folders[selected]?folderHtml(selected):articleHtml(documents[selected])
+  return selected==='home'?graphHtml('home'):folders[selected]?folderHtml(selected):articleHtml(documents[selected])
 }
 function select(path,heading=''){
-  if(path==='playbook'){graphMode='global';graphFocus=null}
-  if(!folders[path]&&!documents[path])return
+  if(graphViews.has(path)){graphMode='global';graphFocus=null;graphFilter=''}
+  if(path!=='home'&&!folders[path]&&!documents[path])return
   selected=path
   history.pushState({},'',docUrl(path)+(heading?'&heading='+encodeURIComponent(heading):''))
   render()
@@ -191,7 +193,7 @@ function sidebarToggleHtml(){
 }
 function render(){
   window.disposePlaybookGraph?.()
-  root.innerHTML='<div class="shell'+(sidebarCollapsed?' sidebar-collapsed':'')+'">'+(sidebarCollapsed?sidebarToggleHtml():sidebarHtml())+'<main class="main"><div class="page-content'+(selected==='playbook'?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
+  root.innerHTML='<div class="shell'+(sidebarCollapsed?' sidebar-collapsed':'')+'">'+(sidebarCollapsed?sidebarToggleHtml():sidebarHtml())+'<main class="main"><div class="page-content'+(graphViews.has(selected)?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
   $('[data-sidebar-visibility]')?.addEventListener('click',()=>{sidebarCollapsed=!sidebarCollapsed;render()})
   root.querySelectorAll('[data-doc]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.doc,node.dataset.heading||'')}))
   root.querySelectorAll('[data-section]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.section)}))
@@ -207,13 +209,13 @@ function render(){
     const input=$('#sidebar-search');input?.focus();input?.setSelectionRange(value.length,value.length)
   })
   root.querySelectorAll('[data-tag]').forEach(node=>node.addEventListener('click',()=>{search=node.dataset.tag;render();$('#sidebar-search')?.focus()}))
-  if(selected==='playbook'){
+  if(graphViews.has(selected)){
     const navigateFocus=id=>{
       graphFocus=id
       graphMode='local'
       render()
     }
-    window.mountPlaybookGraph?.($('.graph-shell'),playbooks,documents,{
+    window.mountPlaybookGraph?.($('.graph-shell'),graphPaths(selected),documents,{
       mode:graphMode,focus:graphFocus,filter:graphFilter,
       ...graphOptions,
       selectNode:navigateFocus,openDocument:select,
@@ -249,7 +251,9 @@ function render(){
 }
 window.addEventListener('popstate',()=>{
   const p=new URLSearchParams(location.search)
-  selected=selectedFromParams(p)
+  const next=selectedFromParams(p)
+  if(next!==selected && graphViews.has(next)){graphMode='global';graphFocus=null;graphFilter=''}
+  selected=next
   render()
   const h=p.get('heading')
   if(h)document.getElementById(window.noteMarkdown.slug(h))?.scrollIntoView({block:'start'})
