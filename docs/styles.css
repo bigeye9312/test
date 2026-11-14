@@ -90,9 +90,6 @@ details.callout>summary.callout-title{cursor:pointer;list-style:revert;padding:0
 .meta-backlink:hover{color:#e2d6f5;text-decoration:underline}
 .meta-tag{background:none;border:0;padding:0 2px;color:#a99bc4;font-size:11px;line-height:1.7}
 .meta-tag:hover{color:#dfc8ff;text-decoration:underline}
-.graph-workspace>.page-metadata{flex:none;align-self:center;width:calc(100% - 88px);max-width:762px;margin:0;padding:10px 0 14px;border:0}
-@media(max-width:750px){.graph-workspace>.page-metadata{width:calc(100% - 50px)}}
-@media(max-width:570px){.graph-workspace>.page-metadata{width:calc(100% - 36px)}}
 
 .brand-mark{
   display:inline-flex;
@@ -182,7 +179,6 @@ body{background:#fff;color:#27313c}
 .graph-shell{background:#202020;color:#d2d2d2}.graph-shell .graph-head{color:#c9c9c9}
 .graph-shell .graph-settings{color:#bbb}
 .graph-shell .settings-search input{color:#ddd}
-.graph-workspace>.page-metadata{color:#66717e}
 .loading-error{color:#8a2932}
 @media(max-width:570px){.sidebar{border-bottom:1px solid #e5e7eb}}
 
@@ -210,7 +206,6 @@ body{background:#fff;color:#27313c}
 .article-wrap{max-width:calc(var(--content-width) + 88px)}
 .graph-workspace>.breadcrumbs,
 .graph-page-title,
-.graph-workspace>.page-metadata,
 .graph-workspace>.graph-shell{max-width:var(--content-width)}
 .graph-workspace>.graph-shell{
   width:calc(100% - 88px);

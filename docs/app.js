@@ -116,7 +116,6 @@ function pageMetadata(doc){
    (incoming.length?'<div class="metadata-row"><span class="metadata-icon" title="Backlinks" aria-label="Backlinks"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><div class="metadata-items">'+backlinks+'</div></div>':'')+
    '</footer>'
 }
-const graphViews=new Set(['home'])
 function homeTagsHtml(){
  const counts=new Map()
  for(const path of pages){
@@ -130,7 +129,7 @@ function homeTagsHtml(){
    tags.map(([tag,count])=>'<button type="button" class="home-tag" data-tag="'+esc(tag)+'" style="font-size:'+(11+6.5*Math.log1p(count)/Math.log1p(max)).toFixed(1)+'px" title="'+esc(count+' documents')+'">#'+esc(tag)+'<span class="home-tag-count">'+count+'</span></button>').join('')+
    '</div></section>'
 }
-function graphHtml(view){
+function graphHtml(){
   const checked=name=>graphOptions[name]?' checked':''
   const slider=(name,min,max,step,title)=>'<label class="settings-slider"><span>'+title+'</span><input type="range" data-graph-option="'+name+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+graphOptions[name]+'"></label>'
   const filters='<details open><summary>Filters</summary><div class="settings-group">'+
@@ -147,9 +146,9 @@ function graphHtml(view){
   const forces='<details><summary>Forces</summary><div class="settings-group">'+
     slider('repel',80,900,20,'Repel force')+slider('linkDistance',30,260,10,'Link distance')+
     '</div></details>'
-  const tabs=view==='home'?'<div class="home-view-tabs" role="tablist" aria-label="Home views"><button type="button" role="tab" data-home-tab="graph" aria-selected="'+(homeTab==='graph')+'">Graph</button><button type="button" role="tab" data-home-tab="tags" aria-selected="'+(homeTab==='tags')+'">Tags</button></div>':''
-  const intro='<div class="graph-workspace">'+breadcrumb(view)+'<div class="graph-page-heading"><h1 class="graph-page-title">'+esc(sidebarFolderLabel(view))+'</h1>'+tabs+'</div>'
-  if(view==='home'&&homeTab==='tags')return intro+homeTagsHtml()+'</div>'
+  const tabs='<div class="home-view-tabs" role="tablist" aria-label="Home views"><button type="button" role="tab" data-home-tab="graph" aria-selected="'+(homeTab==='graph')+'">Graph</button><button type="button" role="tab" data-home-tab="tags" aria-selected="'+(homeTab==='tags')+'">Tags</button></div>'
+  const intro='<div class="graph-workspace">'+breadcrumb('home')+'<div class="graph-page-heading"><h1 class="graph-page-title">Home</h1>'+tabs+'</div>'
+  if(homeTab==='tags')return intro+homeTagsHtml()+'</div>'
   return intro+'<section class="graph-shell" aria-label="Interactive Document Graph">'+
     '<div class="graph-head"><div class="graph-head-actions">'+
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
@@ -161,7 +160,7 @@ function graphHtml(view){
     filters+groups+display+forces+'</aside>'+
     '<div class="graph-canvas-controls"><button data-zoom-in title="Zoom in" aria-label="Zoom in">+</button><button data-zoom-out title="Zoom out" aria-label="Zoom out">−</button><button data-graph-reset title="Reset view" aria-label="Reset view">⟲</button><span class="graph-node-count" aria-live="polite">0 nodes</span></div>'+
     
-    '</section>'+(view==='home'?'':pageMetadata(documents[folders[view]]))+'</div>'
+    '</section></div>'
 }
 function breadcrumb(path){
  const parts=path.split('/')
@@ -192,10 +191,10 @@ function articleHtml(doc){
  '<article class="markdown">'+markdownHtml(doc)+'</article>'+pageMetadata(doc)+'</div>'
 }
 function mainHtml(){
-  return selected==='home'?graphHtml('home'):folders[selected]?folderHtml(selected):articleHtml(documents[selected])
+  return selected==='home'?graphHtml():folders[selected]?folderHtml(selected):articleHtml(documents[selected])
 }
 function select(path,heading=''){
-  if(graphViews.has(path)){graphMode='global';graphFocus=null;graphFilter='';homeTab='graph'}
+  if(path==='home'){graphMode='global';graphFocus=null;graphFilter='';homeTab='graph'}
   if(path!=='home'&&!folders[path]&&!documents[path])return
   selected=path
   history.pushState({},'',docUrl(path)+(heading?'&heading='+encodeURIComponent(heading):''))
@@ -209,7 +208,7 @@ function sidebarToggleHtml(){
 }
 function render(){
   window.disposePlaybookGraph?.()
-  root.innerHTML='<div class="shell'+(sidebarCollapsed?' sidebar-collapsed':'')+'">'+(sidebarCollapsed?sidebarToggleHtml():sidebarHtml())+'<main class="main"><div class="page-content'+(graphViews.has(selected)?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
+  root.innerHTML='<div class="shell'+(sidebarCollapsed?' sidebar-collapsed':'')+'">'+(sidebarCollapsed?sidebarToggleHtml():sidebarHtml())+'<main class="main"><div class="page-content'+(selected==='home'?' is-graph':'')+'">'+mainHtml()+'</div></main></div>'
   $('[data-sidebar-visibility]')?.addEventListener('click',()=>{sidebarCollapsed=!sidebarCollapsed;render()})
   root.querySelectorAll('[data-doc]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.doc,node.dataset.heading||'')}))
   root.querySelectorAll('[data-section]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();select(node.dataset.section)}))
@@ -226,7 +225,7 @@ function render(){
   })
   root.querySelectorAll('[data-tag]').forEach(node=>node.addEventListener('click',()=>{search=node.dataset.tag;sidebarCollapsed=false;render();$('#sidebar-search')?.focus()}))
   root.querySelectorAll('[data-home-tab]').forEach(node=>node.addEventListener('click',()=>{if(homeTab!==node.dataset.homeTab){homeTab=node.dataset.homeTab;render()}}))
-  if(graphViews.has(selected) && homeTab==='graph'){
+  if(selected==='home' && homeTab==='graph'){
     const navigateFocus=id=>{
       graphFocus=id
       graphMode='local'
@@ -269,7 +268,7 @@ function render(){
 window.addEventListener('popstate',()=>{
   const p=new URLSearchParams(location.search)
   const next=selectedFromParams(p)
-  if(next!==selected && graphViews.has(next)){graphMode='global';graphFocus=null;graphFilter=''}
+  if(next!==selected && next==='home'){graphMode='global';graphFocus=null;graphFilter='';homeTab='graph'}
   selected=next
   render()
   const h=p.get('heading')
