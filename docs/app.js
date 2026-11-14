@@ -127,7 +127,7 @@ function homeTagsHtml(){
  const tags=[...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))
  const max=Math.max(1,...tags.map(([,count])=>count))
  return '<section class="home-tags" role="tabpanel" id="home-tags-panel" aria-label="Tags"><div class="home-tags-summary">'+tags.length+' tags · '+pages.length+' documents</div><div class="home-tag-cloud">'+
-   tags.map(([tag,count])=>'<button type="button" class="home-tag" data-tag="'+esc(tag)+'" style="--tag-weight:'+Math.round(100*Math.log1p(count)/Math.log1p(max))+'%" title="'+esc(count+' documents')+'">#'+esc(tag)+'<span class="home-tag-count">'+count+'</span></button>').join('')+
+   tags.map(([tag,count])=>'<button type="button" class="home-tag" data-tag="'+esc(tag)+'" style="font-size:'+(11+6.5*Math.log1p(count)/Math.log1p(max)).toFixed(1)+'px" title="'+esc(count+' documents')+'">#'+esc(tag)+'<span class="home-tag-count">'+count+'</span></button>').join('')+
    '</div></section>'
 }
 function graphHtml(view){
