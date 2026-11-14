@@ -14,6 +14,7 @@ let sidebarOrder=[]
 
 let selected='home', expanded=new Set(['playbook','device-info'])
 let search='', graphFilter=''
+let homeTab='graph'
 let sidebarCollapsed=false
 let graphMode='global', graphFocus=null
 let graphSettingsOpen=false
@@ -125,7 +126,7 @@ function homeTagsHtml(){
  }
  const tags=[...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))
  const max=Math.max(1,...tags.map(([,count])=>count))
- return '<section class="home-tags" aria-label="Document tags"><span class="home-tags-heading">Tags <span class="home-tags-total">'+tags.length+'</span></span><div class="home-tag-cloud">'+
+ return '<section class="home-tags" role="tabpanel" id="home-tags-panel" aria-label="Tags"><div class="home-tags-summary">'+tags.length+' tags · '+pages.length+' documents</div><div class="home-tag-cloud">'+
    tags.map(([tag,count])=>'<button type="button" class="home-tag" data-tag="'+esc(tag)+'" style="--tag-weight:'+Math.round(100*Math.log1p(count)/Math.log1p(max))+'%" title="'+esc(count+' documents')+'">#'+esc(tag)+'<span class="home-tag-count">'+count+'</span></button>').join('')+
    '</div></section>'
 }
@@ -146,7 +147,10 @@ function graphHtml(view){
   const forces='<details><summary>Forces</summary><div class="settings-group">'+
     slider('repel',80,900,20,'Repel force')+slider('linkDistance',30,260,10,'Link distance')+
     '</div></details>'
-  return '<div class="graph-workspace">'+(view==='home'?'<nav class="breadcrumbs" aria-label="Breadcrumb"><span aria-current="page">Home</span></nav>':breadcrumb(view))+'<h1 class="graph-page-title">'+esc(sidebarFolderLabel(view))+'</h1>'+(view==='home'?homeTagsHtml():'')+'<section class="graph-shell" aria-label="Interactive Document Graph">'+
+  const tabs=view==='home'?'<div class="home-view-tabs" role="tablist" aria-label="Home views"><button type="button" role="tab" data-home-tab="graph" aria-selected="'+(homeTab==='graph')+'">Graph</button><button type="button" role="tab" data-home-tab="tags" aria-selected="'+(homeTab==='tags')+'">Tags</button></div>':''
+  const intro='<div class="graph-workspace">'+breadcrumb(view)+'<div class="graph-page-heading"><h1 class="graph-page-title">'+esc(sidebarFolderLabel(view))+'</h1>'+tabs+'</div>'
+  if(view==='home'&&homeTab==='tags')return intro+homeTagsHtml()+'</div>'
+  return intro+'<section class="graph-shell" aria-label="Interactive Document Graph">'+
     '<div class="graph-head"><div class="graph-head-actions">'+
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '</div></div>'+
@@ -165,7 +169,7 @@ function breadcrumb(path){
    const target=parts.slice(0,i+1).join('/')
    const current=i===parts.length-1
    const file=current&&path.endsWith('.md')
-   const valid=file?!!documents[target]:!!folders[target]
+   const valid=target==='home'||(file?!!documents[target]:!!folders[target])
    const display=part
    if(!valid)return '<span>'+esc(display)+'</span>'
    return '<a '+(file?'data-doc':'data-section')+'="'+esc(target)+'" href="'+docUrl(target)+'"'+(current?' aria-current="page" class="breadcrumb-current"':'')+'>'+esc(display)+'</a>'
@@ -191,7 +195,7 @@ function mainHtml(){
   return selected==='home'?graphHtml('home'):folders[selected]?folderHtml(selected):articleHtml(documents[selected])
 }
 function select(path,heading=''){
-  if(graphViews.has(path)){graphMode='global';graphFocus=null;graphFilter=''}
+  if(graphViews.has(path)){graphMode='global';graphFocus=null;graphFilter='';homeTab='graph'}
   if(path!=='home'&&!folders[path]&&!documents[path])return
   selected=path
   history.pushState({},'',docUrl(path)+(heading?'&heading='+encodeURIComponent(heading):''))
@@ -221,7 +225,8 @@ function render(){
     const input=$('#sidebar-search');input?.focus();input?.setSelectionRange(value.length,value.length)
   })
   root.querySelectorAll('[data-tag]').forEach(node=>node.addEventListener('click',()=>{search=node.dataset.tag;sidebarCollapsed=false;render();$('#sidebar-search')?.focus()}))
-  if(graphViews.has(selected)){
+  root.querySelectorAll('[data-home-tab]').forEach(node=>node.addEventListener('click',()=>{if(homeTab!==node.dataset.homeTab){homeTab=node.dataset.homeTab;render()}}))
+  if(graphViews.has(selected) && homeTab==='graph'){
     const navigateFocus=id=>{
       graphFocus=id
       graphMode='local'
