@@ -111,8 +111,8 @@ function pageMetadata(doc){
  const backlinks=incoming.map(source=>'<a class="meta-backlink" data-doc="'+esc(source.path)+'" href="'+docUrl(source.path)+'" title="'+esc(source.path)+'"><span class="meta-backlink-arrow" aria-hidden="true">↗</span>'+esc(label(source.path))+'</a>').join('')
  const tagLinks=tags.map(tag=>'<button type="button" class="meta-tag" data-tag="'+esc(tag)+'">#'+esc(tag)+'</button>').join('')
  return '<footer class="page-metadata" aria-label="Page metadata">'+
-   (incoming.length?'<div class="metadata-row"><span class="metadata-icon" title="Backlinks" aria-label="Backlinks"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><div class="metadata-items">'+backlinks+'</div></div>':'')+
    (tags.length?'<div class="metadata-row"><span class="metadata-icon" title="Tags" aria-label="Tags"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 12 22l-10-10V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><circle cx="7" cy="7" r="1"/></svg></span><div class="metadata-items metadata-tags">'+tagLinks+'</div></div>':'')+
+   (incoming.length?'<div class="metadata-row"><span class="metadata-icon" title="Backlinks" aria-label="Backlinks"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><div class="metadata-items">'+backlinks+'</div></div>':'')+
    '</footer>'
 }
 function graphHtml(){
