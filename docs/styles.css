@@ -211,7 +211,8 @@ body{background:#fff;color:#27313c}
   width:calc(100% - 88px);
   align-self:center;
   min-width:0;
-  flex:1 1 auto;
+  flex:0 1 480px;
+  min-height:260px;
 }
 @media(max-width:750px){
   .graph-workspace>.graph-shell{width:calc(100% - 50px)}
@@ -312,9 +313,9 @@ body{background:#fff;color:#27313c}
 .force-node.is-focus .node-core{stroke:#fff;stroke-width:1.6;stroke-opacity:1}
 .force-node.is-focus .node-title{fill:#fff;font-weight:700}
 
-.graph-page-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;width:calc(100% - 88px);max-width:var(--content-width);align-self:center;flex:none;margin:0 0 28px}
+.graph-page-heading{display:flex;flex-direction:column;align-items:flex-start;gap:13px;width:calc(100% - 88px);max-width:var(--content-width);align-self:center;flex:none;margin:0 0 18px}
 .graph-page-heading .graph-page-title{width:auto;min-width:0;margin:0}
-.home-view-tabs{display:flex;gap:16px;flex:none;align-self:center;border-bottom:1px solid #e3e6eb}
+.home-view-tabs{display:flex;gap:16px;flex:none;align-self:flex-start;border-bottom:1px solid #e3e6eb}
 .home-view-tabs button{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:9px 2px;color:#7b8594;font-size:12px;font-weight:550}
 .home-view-tabs button:hover{color:#303c4d}
 .home-view-tabs button[aria-selected="true"]{color:#303c4d;border-bottom-color:#6f79a7;font-weight:650}
@@ -326,5 +327,5 @@ body{background:#fff;color:#27313c}
 .home-tag:focus-visible{outline:2px solid #7787bf;outline-offset:2px}
 .home-tag-count{font-size:10px;color:#9099a8;font-weight:400;margin-left:5px}
 .metadata-icon[title="Tags"] svg{transform:scaleX(-1)}
-@media(max-width:750px){.graph-page-heading,.home-tags{width:calc(100% - 50px)}.graph-page-heading{margin-bottom:24px}}
-@media(max-width:570px){.graph-page-heading,.home-tags{width:calc(100% - 36px)}.graph-page-heading{gap:8px;margin-bottom:18px}.home-tags{padding:20px 16px}.home-tag-cloud{gap:12px 15px}.home-view-tabs{gap:11px}}
+@media(max-width:750px){.graph-page-heading,.home-tags{width:calc(100% - 50px)}.graph-page-heading{margin-bottom:16px}}
+@media(max-width:570px){.graph-page-heading,.home-tags{width:calc(100% - 36px)}.graph-page-heading{gap:10px;margin-bottom:14px}.home-tags{padding:20px 16px}.home-tag-cloud{gap:12px 15px}.home-view-tabs{gap:11px}.graph-workspace>.graph-shell{flex-basis:410px}}
