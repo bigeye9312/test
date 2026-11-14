@@ -55,7 +55,7 @@
     const edges = allEdges.filter(edge => visible.has(edge.source) && visible.has(edge.target))
       .map(edge => ({...edge}))
     const counter = panel.querySelector('.graph-node-count')
-    if (counter) counter.textContent = nodes.length + ' nodes'
+    if (counter) counter.textContent = nodes.length + ' docs'
     const selectedId = mode === 'local' && focus ? focus.id : null
     const width = 960, height = 560
     const svg = d3.select(canvas).append('svg')
