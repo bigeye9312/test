@@ -228,21 +228,52 @@ function breadcrumb(path){
    return '<a '+(file?'data-doc':'data-section')+'="'+esc(target)+'" href="'+docUrl(target)+'"'+(current?' aria-current="page" class="breadcrumb-current"':'')+'>'+esc(display)+'</a>'
  }).join('<span class="breadcrumb-divider">/</span>')+'</nav>'
 }
+
+function documentTocHtml(doc){
+ const headings=[],seen=new Map()
+ let fence=null
+ for(const line of doc.body.split(/\r?\n/)){
+  const mark=line.match(/^\s*(`{3,}|~{3,})/)
+  if(mark){
+   if(!fence)fence=mark[1][0]
+   else if(mark[1][0]===fence)fence=null
+   continue
+  }
+  if(fence)continue
+  const heading=line.match(/^(#{2,3})\s+(.+?)\s*#*\s*$/)
+  if(!heading)continue
+  const text=heading[2].replace(/\[([^\]]+)\]\([^)]*\)/g,'$1').replace(/[`*_~]/g,'')
+  const key=window.noteMarkdown.slug(text),count=seen.get(key)||0
+  seen.set(key,count+1)
+  headings.push({id:key+(count?'-'+count:''),title:text,level:heading[1].length})
+ }
+ if(!headings.length)return ''
+ return '<nav class="document-toc" aria-label="On this page"><div class="document-toc-heading">On this page</div>'+
+  headings.map(h=>'<a class="document-toc-link'+(h.level===3?' is-subheading':'')+'" href="#'+esc(h.id)+'" data-toc-target="'+esc(h.id)+'">'+esc(h.title)+'</a>').join('')+'</nav>'
+}
 function folderHtml(folder){
  const doc=documents[folders[folder]]
  if(!doc)return ''
-
  const subfolders=Object.keys(folders).filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
  const files=pages.filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
  const children=[...subfolders.map(path=>({path,folder:true})),...files.map(path=>({path,folder:false}))]
+ const sections=folder==='playbook'?[...new Set(files.map(path=>(documents[path]?.meta?.tags||[]).find(tag=>tag.startsWith('area/'))||'other'))]
+  .sort((a,b)=>a.localeCompare(b)).map(group=>({
+   name:group==='other'?'Other':group.replace(/^area\//,'').replace(/\b[a-z]/g,ch=>ch.toUpperCase()),
+   items:files.filter(path=>((documents[path]?.meta?.tags||[]).find(tag=>tag.startsWith('area/'))||'other')===group).map(path=>({path,folder:false}))
+  })):
+  [{name:'Contents',items:children}]
+ const contents=sections.filter(section=>section.items.length).map(section=>
+  '<section class="folder-toc-section"><h2 class="folder-toc-heading">'+esc(section.name)+' <span>'+section.items.length+'</span></h2>'+
+  '<ul class="folder-toc-list">'+section.items.map(item=>'<li><a href="'+docUrl(item.path)+'" '+(item.folder?'data-section':'data-doc')+'="'+esc(item.path)+'">'+
+    '<span>'+esc(label(item.path))+'</span><span class="folder-toc-chevron" aria-hidden="true">›</span></a></li>').join('')+'</ul></section>').join('')
  return '<div class="article-wrap">'+breadcrumb(folder)+'<h1 class="document-title">'+esc(label(folder))+'</h1>'+
- '<div class="markdown">'+markdownHtml(doc)+'</div>'+
- (children.length?'<div class="folder-children">'+children.map(item=>'<a href="'+docUrl(item.path)+'" '+(item.folder?'data-section':'data-doc')+'="'+esc(item.path)+'"><span class="folder-child-icon">'+(item.folder?'▤':'▧')+'</span><strong>'+esc(label(item.path))+'</strong><span class="folder-child-arrow">›</span></a>').join('')+'</div>':'')+pageMetadata(doc)+'</div>'
+  '<div class="markdown">'+markdownHtml(doc)+'</div>'+
+  (contents?'<nav class="folder-toc" aria-label="Document contents">'+contents+'</nav>':'')+pageMetadata(doc)+'</div>'
 }
 function articleHtml(doc){
-
  return '<div class="article-wrap">'+breadcrumb(doc.path)+'<h1 class="document-title">'+esc(label(doc.path))+'</h1>'+
- '<article class="markdown">'+markdownHtml(doc)+'</article>'+pageMetadata(doc)+'</div>'
+ '<div class="document-layout">'+documentTocHtml(doc)+'<article class="markdown">'+markdownHtml(doc)+'</article></div>'+pageMetadata(doc)+'</div>'
 }
 function mainHtml(){
   return selected==='home'?graphHtml():folders[selected]?folderHtml(selected):articleHtml(documents[selected])
@@ -310,6 +341,7 @@ function render(){
     })
   }
   root.querySelectorAll('[data-tag]').forEach(node=>node.addEventListener('click',()=>{search=node.dataset.tag;sidebarCollapsed=false;render();$('#sidebar-search')?.focus()}))
+  root.querySelectorAll('[data-toc-target]').forEach(node=>node.addEventListener('click',e=>{e.preventDefault();document.getElementById(node.dataset.tocTarget)?.scrollIntoView({block:'start',behavior:'smooth'})}))
   root.querySelectorAll('[data-home-tab]').forEach(node=>node.addEventListener('click',()=>{if(homeTab!==node.dataset.homeTab){homeTab=node.dataset.homeTab;render()}}))
   if(selected==='home' && homeTab==='graph'){
     const navigateFocus=id=>{
