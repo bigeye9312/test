@@ -115,8 +115,20 @@ function pageMetadata(doc){
    (incoming.length?'<div class="metadata-row"><span class="metadata-icon" title="Backlinks" aria-label="Backlinks"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><div class="metadata-items">'+backlinks+'</div></div>':'')+
    '</footer>'
 }
-const graphViews=new Set(['home','playbook','device-info'])
-const graphPaths=view=>view==='home'?[...new Set([...pages,...Object.values(folders)])]:view==='playbook'?playbooks:[...new Set([...pages.filter(path=>path.startsWith('device-info/')),...Object.entries(folders).filter(([key])=>key==='device-info'||key.startsWith('device-info/')).map(([,path])=>path)])]
+const graphViews=new Set(['home'])
+function homeTagsHtml(){
+ const counts=new Map()
+ for(const path of pages){
+  const tags=documents[path]?.meta?.tags
+  if(!Array.isArray(tags))continue
+  for(const tag of new Set(tags.filter(tag=>typeof tag==='string'&&tag.trim())))counts.set(tag,(counts.get(tag)||0)+1)
+ }
+ const tags=[...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))
+ const max=Math.max(1,...tags.map(([,count])=>count))
+ return '<section class="home-tags" aria-label="Document tags"><span class="home-tags-heading">Tags <span class="home-tags-total">'+tags.length+'</span></span><div class="home-tag-cloud">'+
+   tags.map(([tag,count])=>'<button type="button" class="home-tag" data-tag="'+esc(tag)+'" style="--tag-weight:'+Math.round(100*Math.log1p(count)/Math.log1p(max))+'%" title="'+esc(count+' documents')+'">#'+esc(tag)+'<span class="home-tag-count">'+count+'</span></button>').join('')+
+   '</div></section>'
+}
 function graphHtml(view){
   const checked=name=>graphOptions[name]?' checked':''
   const slider=(name,min,max,step,title)=>'<label class="settings-slider"><span>'+title+'</span><input type="range" data-graph-option="'+name+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+graphOptions[name]+'"></label>'
@@ -134,7 +146,7 @@ function graphHtml(view){
   const forces='<details><summary>Forces</summary><div class="settings-group">'+
     slider('repel',80,900,20,'Repel force')+slider('linkDistance',30,260,10,'Link distance')+
     '</div></details>'
-  return '<div class="graph-workspace">'+(view==='home'?'<nav class="breadcrumbs" aria-label="Breadcrumb"><span aria-current="page">Home</span></nav>':breadcrumb(view))+'<h1 class="graph-page-title">'+esc(sidebarFolderLabel(view))+'</h1><section class="graph-shell" aria-label="Interactive Document Graph">'+
+  return '<div class="graph-workspace">'+(view==='home'?'<nav class="breadcrumbs" aria-label="Breadcrumb"><span aria-current="page">Home</span></nav>':breadcrumb(view))+'<h1 class="graph-page-title">'+esc(sidebarFolderLabel(view))+'</h1>'+(view==='home'?homeTagsHtml():'')+'<section class="graph-shell" aria-label="Interactive Document Graph">'+
     '<div class="graph-head"><div class="graph-head-actions">'+
     '<button class="graph-toolbar-button" data-settings-toggle aria-expanded="'+graphSettingsOpen+'" title="Settings" aria-label="Settings">☷</button>'+
     '</div></div>'+
@@ -162,7 +174,7 @@ function breadcrumb(path){
 function folderHtml(folder){
  const doc=documents[folders[folder]]
  if(!doc)return ''
- if(graphViews.has(folder))return graphHtml(folder)
+
  const subfolders=Object.keys(folders).filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
  const files=pages.filter(path=>path.startsWith(folder+'/')&&!path.slice(folder.length+1).includes('/'))
  const children=[...subfolders.map(path=>({path,folder:true})),...files.map(path=>({path,folder:false}))]
@@ -208,14 +220,14 @@ function render(){
     render()
     const input=$('#sidebar-search');input?.focus();input?.setSelectionRange(value.length,value.length)
   })
-  root.querySelectorAll('[data-tag]').forEach(node=>node.addEventListener('click',()=>{search=node.dataset.tag;render();$('#sidebar-search')?.focus()}))
+  root.querySelectorAll('[data-tag]').forEach(node=>node.addEventListener('click',()=>{search=node.dataset.tag;sidebarCollapsed=false;render();$('#sidebar-search')?.focus()}))
   if(graphViews.has(selected)){
     const navigateFocus=id=>{
       graphFocus=id
       graphMode='local'
       render()
     }
-    window.mountPlaybookGraph?.($('.graph-shell'),graphPaths(selected),documents,{
+    window.mountPlaybookGraph?.($('.graph-shell'),playbooks,documents,{
       mode:graphMode,focus:graphFocus,filter:graphFilter,
       ...graphOptions,
       selectNode:navigateFocus,openDocument:select,

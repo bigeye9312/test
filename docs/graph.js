@@ -37,14 +37,6 @@
         return target&&target!==source?{source,target}:null
       }).filter(Boolean)
     })
-    const nodePaths = new Set(paths)
-    for (const path of paths) {
-      if (!path.startsWith('device-info/') || path.split('/').length < 3) continue
-      const parent = path.split('/').slice(0, -2).join('/') + '/index.md'
-      if (nodePaths.has(parent)) {
-        allEdges.push({source: parent.replace(/\.md$/, ''), target: path.replace(/\.md$/, '')})
-      }
-    }
     const adjacency = new Map(allNodes.map(node => [node.id, new Set()]))
     for (const edge of allEdges) {
       adjacency.get(edge.source)?.add(edge.target)
