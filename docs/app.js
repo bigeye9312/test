@@ -303,10 +303,12 @@ function render(){
   root.querySelectorAll('[data-folder]').forEach(node=>node.addEventListener('click',()=>{
     expanded.has(node.dataset.folder)?expanded.delete(node.dataset.folder):expanded.add(node.dataset.folder);render()
   }))
-  $('#sidebar-search')?.addEventListener('input',e=>{
-    const value=e.target.value;search=value
+  $('#sidebar-search')?.addEventListener('keydown',e=>{
+    if(e.key!=='Enter')return
+    e.preventDefault()
+    search=e.target.value
     render()
-    const input=$('#sidebar-search');input?.focus();input?.setSelectionRange(value.length,value.length)
+    $('#sidebar-search')?.focus()
   })
   if(selected==='home' && homeTab==='tags'){
     mountHomeTagCloud()
