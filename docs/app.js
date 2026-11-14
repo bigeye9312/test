@@ -15,6 +15,7 @@ let sidebarOrder=[]
 let selected='home', expanded=new Set(['playbook','device-info'])
 let search='', graphFilter=''
 let homeTab='graph'
+let tagFilter='', tagSettingsOpen=false, tagShowCounts=true, tagBubbleScale=1
 let sidebarCollapsed=false
 let graphMode='global', graphFocus=null
 let graphSettingsOpen=false
@@ -126,10 +127,17 @@ function tagCounts(){
  return [...counts].map(([tag,count])=>({tag,count})).sort((a,b)=>b.count-a.count||a.tag.localeCompare(b.tag))
 }
 function homeTagsHtml(){
- const tags=tagCounts()
+ const count=tagCounts().length
  return '<section class="home-tags" role="tabpanel" id="home-tags-panel" aria-label="Tags">'+
-  '<div class="home-tags-head"><span>Tag Cloud</span><span>'+tags.length+' tags · '+pages.length+' documents</span></div>'+
-  '<div class="home-tag-cloud" aria-label="Interactive tag cloud"></div></section>'
+  '<div class="graph-head"><div class="graph-head-actions"><button class="graph-toolbar-button" data-tag-settings-toggle aria-expanded="'+tagSettingsOpen+'" title="Settings" aria-label="Settings">☷</button></div></div>'+
+  '<div class="home-tag-cloud" aria-label="Interactive tag cloud"></div>'+
+  '<label class="graph-quick-search'+(tagSettingsOpen?' is-hidden':'')+'"><span class="search-icon" aria-hidden="true">⌕</span><input id="tag-quick-search" type="search" placeholder="Search" value="'+esc(tagFilter)+'" aria-label="Search tags"></label>'+
+  '<aside class="graph-settings'+(tagSettingsOpen?' is-open':'')+'" aria-label="Tag settings">'+
+  '<div class="settings-top"><strong>Settings</strong><button type="button" data-tag-settings-close title="Close settings" aria-label="Close settings">×</button></div>'+
+  '<details open><summary>Filters</summary><div class="settings-group"><label class="settings-search"><span class="search-icon" aria-hidden="true">⌕</span><input id="tag-settings-search" type="search" placeholder="Search" value="'+esc(tagFilter)+'" aria-label="Search tags"></label></div></details>'+
+  '<details open><summary>Display</summary><div class="settings-group"><label class="settings-toggle"><span>Document counts</span><input type="checkbox" data-tag-counts'+(tagShowCounts?' checked':'')+'><i></i></label>'+
+  '<label class="settings-slider"><span>Bubble size</span><input type="range" data-tag-size min="0.7" max="1.3" step="0.1" value="'+tagBubbleScale+'"></label></div></details>'+
+  '</aside><span class="home-tags-count graph-node-count">'+count+' tags</span></section>'
 }
 function mountHomeTagCloud(){
  const host=$('.home-tag-cloud')
@@ -151,7 +159,7 @@ function mountHomeTagCloud(){
   .attr('role','group').attr('aria-label','Tag cloud; select a tag to filter documents')
  const layer=svg.append('g').attr('transform','translate(14,14)')
  const nodes=layer.selectAll('g').data(packed).join('g')
-  .attr('class','home-tag-node').attr('transform',d=>'translate('+d.x+','+d.y+')')
+  .attr('class','home-tag-node').attr('transform',d=>'translate('+d.x+','+d.y+') scale('+tagBubbleScale+')')
   .attr('role','button').attr('tabindex',0)
   .attr('aria-label',d=>d.data.tag+', '+d.data.count+' documents')
  const open=d=>{search=d.data.tag;sidebarCollapsed=false;render();$('#sidebar-search')?.focus()}
@@ -170,8 +178,10 @@ function mountHomeTagCloud(){
    const label='#'+d.data.tag
    return label.length>allowed?label.slice(0,allowed-1)+'…':label
   })
- nodes.filter(d=>d.r>29).append('text').attr('class','home-tag-frequency')
+ nodes.filter(d=>d.r>29 && tagShowCounts).append('text').attr('class','home-tag-frequency')
   .attr('dy','1.35em').text(d=>d.data.count)
+ const matches=d=>d.data.tag.toLowerCase().includes(tagFilter.trim().toLowerCase())
+ nodes.classed('tag-dimmed',d=>!!tagFilter.trim()&&!matches(d))
 }
 function graphHtml(){
   const checked=name=>graphOptions[name]?' checked':''
@@ -267,7 +277,38 @@ function render(){
     render()
     const input=$('#sidebar-search');input?.focus();input?.setSelectionRange(value.length,value.length)
   })
-  if(selected==='home' && homeTab==='tags')mountHomeTagCloud()
+  if(selected==='home' && homeTab==='tags'){
+    mountHomeTagCloud()
+    const setTagSettings=open=>{
+      tagSettingsOpen=open
+      $('.home-tags .graph-settings')?.classList.toggle('is-open',open)
+      $('.home-tags .graph-quick-search')?.classList.toggle('is-hidden',open)
+      $('[data-tag-settings-toggle]')?.setAttribute('aria-expanded',String(open))
+      const active=$(open?'#tag-settings-search':'#tag-quick-search')
+      if(active)active.value=tagFilter
+    }
+    $('[data-tag-settings-toggle]')?.addEventListener('click',()=>setTagSettings(!tagSettingsOpen))
+    $('[data-tag-settings-close]')?.addEventListener('click',()=>setTagSettings(false))
+    for(const id of ['#tag-quick-search','#tag-settings-search']){
+      $(id)?.addEventListener('input',e=>{
+        tagFilter=e.target.value
+        for(const node of root.querySelectorAll('.home-tag-node')){
+          const match=(node.getAttribute('aria-label')||'').split(', ')[0].toLowerCase().includes(tagFilter.trim().toLowerCase())
+          node.classList.toggle('tag-dimmed',!!tagFilter.trim()&&!match)
+        }
+        const other=$(id==='#tag-quick-search'?'#tag-settings-search':'#tag-quick-search')
+        if(other)other.value=tagFilter
+      })
+    }
+    $('[data-tag-counts]')?.addEventListener('change',e=>{tagShowCounts=e.target.checked;render()})
+    $('[data-tag-size]')?.addEventListener('input',e=>{
+      tagBubbleScale=Number(e.target.value)
+      root.querySelectorAll('.home-tag-node').forEach(node=>{
+        const original=node.getAttribute('transform').replace(/ scale\([^)]*\)$/,'')
+        node.setAttribute('transform',original+' scale('+tagBubbleScale+')')
+      })
+    })
+  }
   root.querySelectorAll('[data-tag]').forEach(node=>node.addEventListener('click',()=>{search=node.dataset.tag;sidebarCollapsed=false;render();$('#sidebar-search')?.focus()}))
   root.querySelectorAll('[data-home-tab]').forEach(node=>node.addEventListener('click',()=>{if(homeTab!==node.dataset.homeTab){homeTab=node.dataset.homeTab;render()}}))
   if(selected==='home' && homeTab==='graph'){
