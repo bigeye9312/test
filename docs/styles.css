@@ -319,13 +319,17 @@ body{background:#fff;color:#27313c}
 .home-view-tabs button{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:9px 2px;color:#7b8594;font-size:12px;font-weight:550}
 .home-view-tabs button:hover{color:#303c4d}
 .home-view-tabs button[aria-selected="true"]{color:#303c4d;border-bottom-color:#6f79a7;font-weight:650}
-.home-tags{flex:1 1 auto;min-height:0;overflow:auto;width:calc(100% - 88px);max-width:var(--content-width);align-self:center;padding:28px 30px;border:1px solid #e5e8ee;border-radius:5px;background:#fff}
-.home-tags-summary{font-size:12px;color:#7b8595;margin-bottom:24px}
-.home-tag-cloud{display:flex;flex-wrap:wrap;align-content:flex-start;align-items:baseline;gap:13px 22px}
-.home-tag{border:0;background:none;padding:3px 0;color:#58668d;font-size:calc(11px + var(--tag-weight) * .065);font-weight:500;line-height:1.35;white-space:nowrap}
-.home-tag:hover{color:#343e79;text-decoration:underline}
-.home-tag:focus-visible{outline:2px solid #7787bf;outline-offset:2px}
-.home-tag-count{font-size:10px;color:#9099a8;font-weight:400;margin-left:5px}
+.home-tags{display:flex;flex-direction:column;flex:0 1 480px;min-height:260px;overflow:hidden;width:calc(100% - 88px);max-width:var(--content-width);align-self:center;border-radius:5px;background:#202020;color:#d2d2d2}
+.home-tags-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:37px;padding:0 15px;background:#262626;border-bottom:1px solid #353535;font-size:11px;font-weight:550}
+.home-tags-head span:last-child{color:#999;font-weight:400}
+.home-tag-cloud{flex:1;min-height:0;overflow:hidden}
+.home-tag-cloud svg{display:block;width:100%;height:100%}
+.home-tag-node{cursor:pointer;outline:none}
+.home-tag-node circle{stroke-width:1.2;transition:fill-opacity .15s,stroke-opacity .15s}
+.home-tag-node:hover circle,.home-tag-node:focus-visible circle{fill-opacity:.34;stroke-opacity:1;stroke-width:2}
+.home-tag-name{fill:#e0e0e0;text-anchor:middle;pointer-events:none;font-weight:550}
+.home-tag-frequency{fill:#999;text-anchor:middle;pointer-events:none;font-size:10px}
+.home-tag-node:focus-visible .home-tag-name{text-decoration:underline}
 .metadata-icon[title="Tags"] svg{transform:scaleX(-1)}
 @media(max-width:750px){.graph-page-heading,.home-tags{width:calc(100% - 50px)}.graph-page-heading{margin-bottom:16px}}
-@media(max-width:570px){.graph-page-heading,.home-tags{width:calc(100% - 36px)}.graph-page-heading{gap:10px;margin-bottom:14px}.home-tags{padding:20px 16px}.home-tag-cloud{gap:12px 15px}.home-view-tabs{gap:11px}.graph-workspace>.graph-shell{flex-basis:410px}}
+@media(max-width:570px){.graph-page-heading,.home-tags{width:calc(100% - 36px)}.graph-page-heading{gap:10px;margin-bottom:14px}.home-view-tabs{gap:11px}.graph-workspace>.graph-shell,.home-tags{flex-basis:410px}}

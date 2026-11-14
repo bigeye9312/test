@@ -116,18 +116,62 @@ function pageMetadata(doc){
    (incoming.length?'<div class="metadata-row"><span class="metadata-icon" title="Backlinks" aria-label="Backlinks"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><div class="metadata-items">'+backlinks+'</div></div>':'')+
    '</footer>'
 }
-function homeTagsHtml(){
+function tagCounts(){
  const counts=new Map()
  for(const path of pages){
   const tags=documents[path]?.meta?.tags
   if(!Array.isArray(tags))continue
   for(const tag of new Set(tags.filter(tag=>typeof tag==='string'&&tag.trim())))counts.set(tag,(counts.get(tag)||0)+1)
  }
- const tags=[...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))
- const max=Math.max(1,...tags.map(([,count])=>count))
- return '<section class="home-tags" role="tabpanel" id="home-tags-panel" aria-label="Tags"><div class="home-tags-summary">'+tags.length+' tags · '+pages.length+' documents</div><div class="home-tag-cloud">'+
-   tags.map(([tag,count])=>'<button type="button" class="home-tag" data-tag="'+esc(tag)+'" style="font-size:'+(11+6.5*Math.log1p(count)/Math.log1p(max)).toFixed(1)+'px" title="'+esc(count+' documents')+'">#'+esc(tag)+'<span class="home-tag-count">'+count+'</span></button>').join('')+
-   '</div></section>'
+ return [...counts].map(([tag,count])=>({tag,count})).sort((a,b)=>b.count-a.count||a.tag.localeCompare(b.tag))
+}
+function homeTagsHtml(){
+ const tags=tagCounts()
+ return '<section class="home-tags" role="tabpanel" id="home-tags-panel" aria-label="Tags">'+
+  '<div class="home-tags-head"><span>Tag Cloud</span><span>'+tags.length+' tags · '+pages.length+' documents</span></div>'+
+  '<div class="home-tag-cloud" aria-label="Interactive tag cloud"></div></section>'
+}
+function mountHomeTagCloud(){
+ const host=$('.home-tag-cloud')
+ if(!host||!window.d3)return
+ const d3=window.d3
+ const tags=tagCounts()
+ if(!tags.length){host.textContent='No tags';return}
+ const width=760,height=420
+ const colors=['#8f9ec9','#bd9cce','#86bca8','#c9b17f','#d19a9a']
+ const tint=tag=>{
+  const kind=tag.startsWith('area/')?tag.slice(5):''
+  if(categories[kind])return categories[kind].color
+  return colors[[...tag].reduce((n,ch)=>n+ch.codePointAt(0),0)%colors.length]
+ }
+ const packed=d3.pack().size([width-28,height-28]).padding(8)(
+  d3.hierarchy({children:tags}).sum(d=>d.count?Math.pow(d.count,.7)+3:0).sort((a,b)=>b.value-a.value)
+ ).leaves()
+ const svg=d3.select(host).append('svg').attr('viewBox','0 0 '+width+' '+height)
+  .attr('role','group').attr('aria-label','Tag cloud; select a tag to filter documents')
+ const layer=svg.append('g').attr('transform','translate(14,14)')
+ const nodes=layer.selectAll('g').data(packed).join('g')
+  .attr('class','home-tag-node').attr('transform',d=>'translate('+d.x+','+d.y+')')
+  .attr('role','button').attr('tabindex',0)
+  .attr('aria-label',d=>d.data.tag+', '+d.data.count+' documents')
+ const open=d=>{search=d.data.tag;sidebarCollapsed=false;render();$('#sidebar-search')?.focus()}
+ nodes.on('click',(_,d)=>open(d)).on('keydown',(event,d)=>{
+  if(event.key==='Enter'||event.key===' '){event.preventDefault();open(d)}
+ })
+ nodes.append('circle').attr('r',d=>d.r)
+  .attr('fill',d=>tint(d.data.tag)).attr('fill-opacity',.19)
+  .attr('stroke',d=>tint(d.data.tag)).attr('stroke-opacity',.68)
+ nodes.append('title').text(d=>'#'+d.data.tag+' · '+d.data.count+' documents')
+ nodes.append('text').attr('class','home-tag-name')
+  .attr('font-size',d=>Math.min(17,Math.max(9,d.r*.39)))
+  .attr('dy',d=>d.r>29?'-0.1em':'0.32em')
+  .text(d=>{
+   const allowed=Math.max(3,Math.floor(d.r*1.65/(Math.min(17,Math.max(9,d.r*.39))*.55)))
+   const label='#'+d.data.tag
+   return label.length>allowed?label.slice(0,allowed-1)+'…':label
+  })
+ nodes.filter(d=>d.r>29).append('text').attr('class','home-tag-frequency')
+  .attr('dy','1.35em').text(d=>d.data.count)
 }
 function graphHtml(){
   const checked=name=>graphOptions[name]?' checked':''
@@ -223,6 +267,7 @@ function render(){
     render()
     const input=$('#sidebar-search');input?.focus();input?.setSelectionRange(value.length,value.length)
   })
+  if(selected==='home' && homeTab==='tags')mountHomeTagCloud()
   root.querySelectorAll('[data-tag]').forEach(node=>node.addEventListener('click',()=>{search=node.dataset.tag;sidebarCollapsed=false;render();$('#sidebar-search')?.focus()}))
   root.querySelectorAll('[data-home-tab]').forEach(node=>node.addEventListener('click',()=>{if(homeTab!==node.dataset.homeTab){homeTab=node.dataset.homeTab;render()}}))
   if(selected==='home' && homeTab==='graph'){
